@@ -1,0 +1,316 @@
+---
+title: "Bolivarian Republic of Venezuela"
+output-file: "venezuela"
+iso: "VEN"
+version: "2.0.0"
+execute:
+  echo: false
+  warning: false
+format:
+  gdi-country-snapshot-typst: default
+---
+
+```{r}
+#| include: false
+devtools::load_all(".")
+knitr::opts_chunk$set(dev = "svglite")
+code <- rmarkdown::metadata$iso
+i <- 1
+```
+
+```{=typst}
+`r add_typst("typst")`
+```
+
+```{=typst}
+#grid(
+  columns: (40%, 1%, 59%),
+  box(fill: rgb("#f4f8fd"), inset: .8em)[
+    #h0[ABOUT]
+    #about[
+      The #b[Country Data Snapshot] offers a curated roundup of migration-related statistics pulled from an assortment of distinguished data providers, packaged into a concise, user-friendly document. 
+      
+      Note that these are subject to inherent limitations of global datasets and should be considered as statistical baselines, especially in the absence of more precise local data. Figures here may differ from those published by national statistics offices or other sources. Users are encouraged to consult alternative sources relevant to their specific use case when available. For more information, see our #link("https://google.com/")[Data Appendix].
+    ]
+  ],
+  none,
+  box(inset: .8em)[
+    #h0[CONTENTS]
+    #contents[
+      - How many emigrants and immigrants are there? What are their destinations and origins? What is their age and sex structure? #figure[→ Figures] #nbox[1] #nbox[2] #nbox[3]
+      
+      - What are trends and patterns of net migration? #figure[→ Figures] #nbox[4] #nbox[5]
+      
+      - When and where have migrants died or gone missing? #figure[→ Figures] #nbox[6] #nbox[7]
+      
+      - When and where have displacements occurred? What are the causes? #figure[→ Figures] #nbox[8] #nbox[9] #nbox[10]
+      
+      - How many refugees are there? #figure[→ Figures] #nbox[11]
+      
+      - How large are remittances and foreign direct investment? #figure[→ Figures] #nbox[12] #nbox[13]
+      
+      - What are the demographic features of the overall population? #figure[→ Figures] #nbox[14] #nbox[15] #nbox[16]
+      
+      - How have economic indicators developed? #figure[→ Figures] #nbox[17] #nbox[18] #nbox[19]
+    ]
+  ],
+)
+```
+
+```{=typst}
+#h1[I. MIGRATION]
+```
+
+```{=typst}
+#caption[
+`r caption_stocks_emig(code)`
+#colbreak()
+`r caption_stocks_immig(code)`
+- These numbers include refugees but do not include irregular migrants. 
+]
+```
+
+```{r}
+#| fig-width: 6.7
+#| fig-height: 2.75
+#| message: false
+
+snap_plot("stocks", code, basesize = basesize, font = font) |> 
+  plot_label(i, span = 1, h = .15 / 2.75)
+i <- i + 1
+```
+
+```{r}
+#| fig-width: 6.7
+#| fig-height: 2.25
+#| message: false
+
+snap_plot("nats", code, basesize = basesize, font = font) |> 
+  plot_label(i, span = 1, h = .15 / 2.25)
+i <- i + 1
+```
+
+```{=typst}
+///////////////////////////////////////////////////////////////////// PAGE 2 ⬇️
+#pagebreak()
+```
+
+```{=typst}
+#caption[`r caption_migpyr(code)`]
+```
+
+```{r}
+#| fig-width: 6.7
+#| fig-height: 2.50
+#| message: false
+
+snap_plot("migpyr", code, basesize = basesize, font = font) |> 
+  plot_label(i, span = 1, h = .15 / 2.50)
+i <- i + 1
+```
+
+```{=typst}
+#caption[`r caption_nmig(code)`]
+```
+
+```{r}
+#| fig-width: 6.7
+#| fig-height: 2.50
+#| message: false
+
+cowplot::plot_grid(
+  snap_plot("nmig", code, basesize = basesize, font = font) |> 
+    plot_label(i, h = .15 / 2.50),
+  plot_nmigmap(code, basesize = basesize) |> 
+    plot_label(i + 1, h = .15 / 2.50)
+)
+i <- i + 2
+```
+
+```{=typst}
+#caption[`r caption_mmp(code)`]
+```
+
+```{r}
+#| fig-width: 6.7
+#| fig-height: 2.50
+#| message: false
+
+cowplot::plot_grid(
+  snap_plot("mmp", code, basesize = basesize, font = font) |> 
+    plot_label(i, h = .15 / 2.50),
+  plot_mmpmap(code, basesize = basesize) |> 
+    plot_label(i + 1, h = .15 / 2.50)
+)
+i <- i + 2
+```
+
+```{=typst}
+///////////////////////////////////////////////////////////////////// PAGE 3 ⬇️
+#pagebreak()
+```
+
+
+```{=typst}
+#caption[`r caption_idp(code)`]
+```
+
+```{r}
+#| fig-width: 6.7
+#| fig-height: 2.25
+#| message: false
+
+snap_plot("idp", code, basesize = basesize, font = font) |> 
+  plot_label(i, span = 1, h = .15 / 2.25)
+i <- i + 1
+```
+
+```{r}
+#| fig-width: 6.7
+#| fig-height: 3.0
+#| message: false
+
+cowplot::plot_grid(
+  plot_idpmap(code, basesize = basesize) |> plot_label(i, h = .15 / 3.0),
+  plot_idpcause(code) |> plot_label(i + 1, h = .15 / 3.0)
+)
+i <- i + 2
+```
+
+```{=typst}
+#caption[
+`r caption_refug_orig(code)`
+#colbreak()
+`r caption_refug_host(code)`
+]
+```
+
+```{r}
+#| fig-width: 6.7
+#| fig-height: 2.75
+#| message: false
+
+snap_plot("refug", code, basesize = basesize, font = font) |> 
+  plot_label(i, span = 1, h = .15 / 2.75)
+i <- i + 1
+```
+
+```{=typst}
+///////////////////////////////////////////////////////////////////// PAGE 4 ⬇️
+#pagebreak()
+```
+
+```{=typst}
+#caption[
+`r caption_remin(code)`
+`r caption_remout(code)`
+#colbreak()
+`r caption_fdiin(code)`
+`r caption_fdiout(code)`
+]
+```
+
+```{r}
+#| fig-width: 6.7
+#| fig-height: 2.25
+#| message: false
+
+cowplot::plot_grid(
+  snap_plot("remt", code, basesize = basesize, font = font) |> 
+    plot_label(i, h = .15 / 2.25),
+  snap_plot("fdi", code, basesize = basesize, font = font) |> 
+    plot_label(i + 1, h = .15 / 2.25)
+)
+i <- i + 2
+```
+
+```{=typst}
+#grid(
+  columns: (auto, 1fr),
+  rows: (.4cm, .025cm),
+  rect(
+    width: auto,
+    height: 100%,
+    inset: 2pt,
+    outset: 1pt,
+    fill: rgb("#0033A0")
+  )[
+    #text(
+      size: .7em,
+      weight: "bold",
+      fill: white,
+      baseline: 1pt,
+      "II. DEMOGRAPHICS AND ECONOMY"
+    )
+  ],
+  rect(stroke: none)[
+    #text(
+      fill: rgb("#4068B8"),
+      size: .6em,
+      style: "italic",
+      baseline: -3pt,
+      "Data in this section refer to the general population of `r gdidata::countryname(rmarkdown::metadata$iso, to = 'name_text')` (i.e., migrant and non-migrant population)."
+    )
+  ],
+  rect(width: 12.5em, height: 100%, outset: 1pt, fill: rgb("#0033A0")),
+  rect(width: 100%, height: 100%, outset: 1pt, fill: rgb("#0033A0"))
+)
+```
+
+```{=typst}
+#caption3[
+`r caption_pop(code)`
+#colbreak()
+`r caption_birth(code)`
+#colbreak()
+`r caption_depend(code)`
+]
+```
+
+```{r}
+#| fig-width: 6.7
+#| fig-height: 2.18
+#| message: false
+
+cowplot::plot_grid(
+  snap_plot("pop", code, basesize = basesize, font = font) |> 
+    plot_label(i, span = 3, h = .15 / 2.18),
+  snap_plot("birth", code, basesize = basesize, font = font) |> 
+    plot_label(i + 1, span = 3, h = .15 / 2.18),
+  snap_plot("depend", code, basesize = basesize, font = font) |> 
+    plot_label(i + 2, span = 3, h = .15 / 2.18),
+  nrow = 1
+)
+i <- i + 3
+```
+
+```{=typst}
+#caption3[
+`r caption_income(code)`
+#colbreak()
+`r caption_unem(code)`
+#colbreak()
+`r caption_inf(code)`
+]
+```
+
+```{r}
+#| fig-width: 6.7
+#| fig-height: 2.18
+#| message: false
+
+cowplot::plot_grid(
+  snap_plot("income", code, basesize = basesize, font = font) |> 
+    plot_label(i, span = 3, h = .15 / 2.18),
+  snap_plot("unem", code, basesize = basesize, font = font) |> 
+    plot_label(i + 1, span = 3, h = .15 / 2.18),
+  snap_plot("inf", code, basesize = basesize, font = font) |> 
+    plot_label(i + 2, span = 3, h = .15 / 2.18),
+  nrow = 1
+)
+i <- i + 3
+```
+
+```{=typst}
+#endnote[This Country Data Snapshot was prepared by the Global Data Institute (GDI) of the International Organization for Migration (IOM) using the publishing system Quarto. Charts and captions were generated using R and layouting was done using Typst. Maps are for illustration purposes only. The boundaries and names shown and the designations used on maps do not imply official endorsement or acceptance by IOM. `r kosovo_disclaimer(code)`For questions and suggestions, contact Robert Beyer (rbeyer\@iom.int) or Kenneth S. Reyes (kereyes\@iom.int). #text(size: .75em, fill: rgb("#B3C2E3"))[v.`r rmarkdown::metadata$version`]]
+```

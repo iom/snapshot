@@ -1,0 +1,12 @@
+generated
+
+# Ignore RStudio project files
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+.quarto/
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
