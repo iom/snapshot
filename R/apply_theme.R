@@ -76,25 +76,8 @@ apply_theme <- function(type,
         margin = margin(t = k(3.5), r = k(1), l = k(1))
       ),
       plot.caption.position = "plot",
-      plot.margin = margin(k(4), k(4), k(4), k(4))
+      plot.margin = margin(k(), k(2), k(), k(2))
     ))
-  
-  if (type == "void") {
-    
-    theme_void <- list(
-      theme(
-        axis.title = element_blank(),
-        axis.text = element_blank(),
-        axis.ticks = element_blank(),
-        panel.background = element_rect(
-          fill = NA,
-          color = pal("blues", 5),
-          linewidth = k(.2)
-        ),
-        panel.grid.major = element_blank()
-      ))
-    theme <- c(base, theme_void)
-  }
   
   if (type == "bar-horizontal") {
     

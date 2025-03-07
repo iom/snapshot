@@ -26,6 +26,68 @@ pl_pct1 <- function(num) prettylabel(num, signif = 2, pct = TRUE)
 
 # Migrant stocks ----------------------------------------------------------
 
+caption_stocks <- function(iso) {
+  
+  name <- namer(iso)
+  
+  migrants <- paste(
+    "Migration here refers to permanent residence outside of one's place of",
+    "birth. It includes refugees and asylum-seekers but not irregular migrants. "
+  )
+  
+  if (iso == "XKX") {
+      
+    caption <- paste0(
+      "#caption1[",
+      migrants,
+      "For statistical purposes, UN DESA includes ", name, " in Serbia.",
+      "]"
+    )
+    
+  } else if (iso == "SDN") {
+    
+    caption <- paste0(
+      "#caption3[",
+      "- ", migrants, "\n",
+      "- For statistical purposes, immigrant data during 1990\u20132005 ",
+      "covers Sudan and South Sudan.\n",
+      "#colbreak()\n",
+      caption_stocks_emig(iso), "\n",
+      "#colbreak()\n",
+      caption_stocks_immig(iso),
+      "]"
+    )
+    
+  } else if (iso == "PSE") {
+    
+    caption <- paste0(
+      "#caption3[",
+      "- ", migrants, "\n",
+      "- For statistical purposes, ", name, " includes East Jerusalem. ",
+      "Moreover, its foreign-born migrant stock does not include refugees.\n", 
+      "#colbreak()\n",
+      caption_stocks_emig(iso), "\n",
+      "#colbreak()\n",
+      caption_stocks_immig(iso),
+      "]"
+    )
+    
+  } else {
+    
+    caption <- paste0(
+      "#caption3[",
+      "- ", migrants, "\n",
+      "#colbreak()\n",
+      caption_stocks_emig(iso), "\n",
+      "#colbreak()\n",
+      caption_stocks_immig(iso),
+      "]"
+    )
+  }
+  
+  return(caption)
+}
+
 caption_stocks_emig <- function(iso) {
   
   name <- namer(iso)
@@ -36,63 +98,56 @@ caption_stocks_emig <- function(iso) {
   data_iso <- plot_data("stocks", iso = iso, use_2020 = TRUE)$data |> 
     filter(panel == "emig")
   
-  if (nrow(data_iso) == 0) {
-    
-    caption <- str_glue(
-      "UN DESA has no information on emigrant stocks for {name}.\n\n"
-    )
-    
+  t0 <- min(data_iso$t)
+  t1 <- max(data_iso$t)
+  
+  data_t0 <- filter(data, t == t0) |> summarise(n = sum(n), .by = geo)
+  data_t1 <- filter(data, t == t1) |> summarise(n = sum(n), .by = geo)
+  
+  data_iso_t0 <- filter(data_iso, t == t0) |> 
+    summarise(n = sum(n), .by = geo) |> pull(n)
+  data_iso_t1 <- filter(data_iso, t == t1) |> 
+    summarise(n = sum(n), .by = geo) |> pull(n)
+  
+  # Shares of population
+  pop <- filter(gdidata::wdi, var == "pop") |> rename(pop = v)
+  if (nrow(filter(pop, t == t1)) == 0) {
+    pop_t1 <- filter(pop, t == max(t))
   } else {
-    
-    t0 <- min(data_iso$t)
-    t1 <- max(data_iso$t)
-    
-    data_t0 <- filter(data, t == t0) |> summarise(n = sum(n), .by = geo)
-    data_t1 <- filter(data, t == t1) |> summarise(n = sum(n), .by = geo)
-    
-    data_iso_t0 <- filter(data_iso, t == t0) |> 
-      summarise(n = sum(n), .by = geo) |> pull(n)
-    data_iso_t1 <- filter(data_iso, t == t1) |> 
-      summarise(n = sum(n), .by = geo) |> pull(n)
-    
-    # Shares of population
-    pop <- filter(gdidata::wdi, var == "pop") |> rename(pop = v)
-    if (nrow(filter(pop, t == t1)) == 0) {
-      pop_t1 <- filter(pop, t == max(t))
-    } else {
-      pop_t1 <- filter(pop, t == t1)
-    }
-    share_t1 <- left_join(data_t1, pop_t1, by = "geo") |> 
-      mutate(v = 100 * n / pop) |> 
-      drop_na()
-    share_iso_t1 <- filter(share_t1, geo == iso) |> pull(v)
-    
-    # CAGR from earliest to latest
-    change <- ((data_t1$n / data_t0$n)^(1 / (t1 - t0)) - 1)
-    change_iso <- ((data_iso_t1 / data_iso_t0)^(1 / (t1 - t0)) - 1)
-    change_iso_lab <- pl_pct1(change_iso)
-    if (change_iso > 0) change_iso_lab <- paste0("+", pl_pct1(change_iso))
-
-    # Region
-    data_reg <- filter(data, t == t1) |> 
-      mutate(v = 100 * n / sum(n), .by = geo)
-    within <- filter(data_reg, region == "Within region")$v
-    outside <- filter(data_reg, region == "Outside region")$v
-    within_iso <- filter(data_reg, geo == iso, region == "Within region")$v
-    outside_iso <- filter(data_reg, geo == iso, region == "Outside region")$v
-    
-    caption <- str_glue(paste(
-      " - By UN DESA estimates, emigrants from {name} numbered",
-      "#b[{pl(data_iso_t1)}] {get_pct(data_t1$n, data_iso_t1)} as of {t1},",
-      "equivalent to #b[{pl_pct(share_iso_t1)}]",
-      "{get_pct(share_t1$v, share_iso_t1)} of its population. This was a",
-      "#b[{change_iso_lab}] {get_pct(change, change_iso)} change per year over",
-      "{t0}–{t1}.\n",
-      " - #b[{pl_pct(within_iso)}] {get_pct(within, within_iso)} of emigrants",
-      "remained within the {region} region while #b[{pl_pct(outside_iso)}]",
-      "{get_pct(outside, outside_iso)} emigrated outside the region."
-    ))
+    pop_t1 <- filter(pop, t == t1)
   }
+  share_t1 <- left_join(data_t1, pop_t1, by = "geo") |> 
+    mutate(v = 100 * n / pop) |> 
+    drop_na()
+  share_iso_t1 <- filter(share_t1, geo == iso) |> pull(v)
+  
+  # CAGR from earliest to latest
+  change <- ((data_t1$n / data_t0$n)^(1 / (t1 - t0)) - 1)
+  change_iso <- ((data_iso_t1 / data_iso_t0)^(1 / (t1 - t0)) - 1)
+  change_iso_lab <- pl_pct1(change_iso)
+  if (change_iso > 0) change_iso_lab <- paste0("+", pl_pct1(change_iso))
+
+  # Region
+  data_reg <- filter(data, t == t1) |> 
+    mutate(v = 100 * n / sum(n), .by = geo)
+  within <- filter(data_reg, region == "Within region")$v
+  outside <- filter(data_reg, region == "Outside region")$v
+  within_iso <- filter(data_reg, geo == iso, region == "Within region")$v
+  outside_iso <- filter(data_reg, geo == iso, region == "Outside region")$v
+  
+  caption <- str_glue(
+    "- By UN DESA estimates, emigrants from {name} ",
+    'numbered #b[{ pl(data_iso_t1) }] { get_pct(data_t1$n, data_iso_t1) } ',
+    "as of {t1}, equivalent to #b[{ pl_pct(share_iso_t1) }] ",
+    "{ get_pct(share_t1$v, share_iso_t1) } of its population. This was a ",
+    "#b[{ change_iso_lab }] { get_pct(change, change_iso) } change per year ",
+    "over {t0}–{t1}.\n",
+    # "#colbreak()\n",
+    "- #b[{ pl_pct(within_iso) }] { get_pct(within, within_iso) } of ",
+    "emigrants remained within the {region} region while ",
+    "#b[{ pl_pct(outside_iso) }] { get_pct(outside, outside_iso) } ",
+    "emigrated outside the region."
+  )
   
   return(caption)
 }
@@ -104,66 +159,57 @@ caption_stocks_immig <- function(iso) {
   data <- plot_data("stocks", use_2020 = TRUE)$data |> 
     filter(panel == "immig")
   data_iso <- plot_data("stocks", iso = iso, use_2020 = TRUE)$data |> 
-    filter(panel == "immig")
+    filter(panel == "immig", n > 0)
   
-  if (nrow(data_iso) == 0) {
-    
-    caption <- str_glue(
-      "UN DESA has no information on immigrant stocks for {name}."
-    )
+  t0 <- min(data_iso$t)
+  t1 <- max(data_iso$t)
   
+  data_t0 <- filter(data, t == t0) |> summarise(n = sum(n), .by = geo)
+  data_t1 <- filter(data, t == t1) |> summarise(n = sum(n), .by = geo)
+  
+  data_iso_t0 <- filter(data_iso, t == t0) |> 
+    summarise(n = sum(n), .by = geo) |> pull(n)
+  data_iso_t1 <- filter(data_iso, t == t1) |> 
+    summarise(n = sum(n), .by = geo) |> pull(n)
+  
+  # Shares of population
+  pop <- filter(gdidata::wdi, var == "pop") |> rename(pop = v)
+  if (nrow(filter(pop, t == t1)) == 0) {
+    pop_t1 <- filter(pop, t == max(t))
   } else {
-    
-    t0 <- min(data_iso$t)
-    t1 <- max(data_iso$t)
-    
-    data_t0 <- filter(data, t == t0) |> summarise(n = sum(n), .by = geo)
-    data_t1 <- filter(data, t == t1) |> summarise(n = sum(n), .by = geo)
-    
-    data_iso_t0 <- filter(data_iso, t == t0) |> 
-      summarise(n = sum(n), .by = geo) |> pull(n)
-    data_iso_t1 <- filter(data_iso, t == t1) |> 
-      summarise(n = sum(n), .by = geo) |> pull(n)
-    
-    # Shares of population
-    pop <- filter(gdidata::wdi, var == "pop") |> rename(pop = v)
-    if (nrow(filter(pop, t == t1)) == 0) {
-      pop_t1 <- filter(pop, t == max(t))
-    } else {
-      pop_t1 <- filter(pop, t == t1)
-    }
-    share_t1 <- left_join(data_t1, pop_t1, by = "geo") |> 
-      mutate(v = 100 * n / pop) |> 
-      drop_na()
-    share_iso_t1 <- filter(share_t1, geo == iso) |> pull(v)
-    
-    # CAGR from earliest to latest
-    change <- ((data_t1$n / data_t0$n)^(1 / (t1 - t0)) - 1)
-    change <- change[!is.infinite(change)]
-    change_iso <- ((data_iso_t1 / data_iso_t0)^(1 / (t1 - t0)) - 1)
-    change_iso_lab <- pl_pct1(change_iso)
-    if (change_iso > 0) change_iso_lab <- paste0("+", pl_pct1(change_iso))
-  
-    # Region
-    data_reg <- filter(data, t == t1) |> 
-      mutate(v = 100 * n / sum(n), .by = geo)
-    within <- filter(data_reg, region == "Within region")$v
-    outside <- filter(data_reg, region == "Outside region")$v
-    within_iso <- filter(data_reg, geo == iso, region == "Within region")$v
-    outside_iso <- filter(data_reg, geo == iso, region == "Outside region")$v
-    
-    caption <- str_glue(paste(
-      " - Immigrants in {name} numbered",
-      "#b[{pl(data_iso_t1)}] {get_pct(data_t1$n, data_iso_t1)} as of {t1},", 
-      "equivalent to #b[{pl_pct(share_iso_t1)}]",
-      "{get_pct(share_t1$v, share_iso_t1)} of its population. This was a", 
-      "#b[{change_iso_lab}] {get_pct(change, change_iso)} change per year over",
-      "{t0}–{t1}.\n",
-      " - #b[{pl_pct(within_iso)}] {get_pct(within, within_iso)} of immigrants",
-      "came from within the region while #b[{pl_pct(outside_iso)}]",
-      "{get_pct(outside, outside_iso)} immigrated from outside the region."
-    ))
+    pop_t1 <- filter(pop, t == t1)
   }
+  share_t1 <- left_join(data_t1, pop_t1, by = "geo") |> 
+    mutate(v = 100 * n / pop) |> 
+    drop_na()
+  share_iso_t1 <- filter(share_t1, geo == iso) |> pull(v)
+  
+  # CAGR from earliest to latest
+  change <- ((data_t1$n / data_t0$n)^(1 / (t1 - t0)) - 1)
+  change <- change[!is.infinite(change)]
+  change_iso <- ((data_iso_t1 / data_iso_t0)^(1 / (t1 - t0)) - 1)
+  change_iso_lab <- pl_pct1(change_iso)
+  if (change_iso > 0) change_iso_lab <- paste0("+", pl_pct1(change_iso))
+  
+  # Region
+  data_reg <- filter(data, t == t1) |> 
+    mutate(v = 100 * n / sum(n), .by = geo)
+  within <- filter(data_reg, region == "Within region")$v
+  outside <- filter(data_reg, region == "Outside region")$v
+  within_iso <- filter(data_reg, geo == iso, region == "Within region")$v
+  outside_iso <- filter(data_reg, geo == iso, region == "Outside region")$v
+  
+  caption <- str_glue(paste(
+    "- Immigrants in {name} numbered",
+    "#b[{pl(data_iso_t1)}] {get_pct(data_t1$n, data_iso_t1)} as of {t1},", 
+    "equivalent to #b[{pl_pct(share_iso_t1)}]",
+    "{get_pct(share_t1$v, share_iso_t1)} of its population. This was a", 
+    "#b[{change_iso_lab}] {get_pct(change, change_iso)} change per year over",
+    "{t0}–{t1}.\n",
+    "- #b[{pl_pct(within_iso)}] {get_pct(within, within_iso)} of immigrants",
+    "came from within the region while #b[{pl_pct(outside_iso)}]",
+    "{get_pct(outside, outside_iso)} immigrated from outside the region."
+  ))
   
   return(caption)
 }
@@ -175,18 +221,21 @@ caption_nmig <- function(iso) {
   
   name <- namer(iso)
   
-  nmig <- filter(gdidata::wdi, var == "nmig") |> rename(nmig = v) |> select(-var)
-  pop <- filter(gdidata::wdi, var == "pop") |> rename(pop = v) |> select(-var)
-  data <- full_join(nmig, pop, by = c("geo", "t")) |> 
-    mutate(v = 1000 * nmig / pop)
-  data_iso <- filter(data, geo == iso)
+  data <- plot_data("nmig")$data
+  # pop <- filter(gdidata::wdi, var == "pop") |> rename(pop = v) |> select(-var)
+  # data <- full_join(nmig, pop, by = c("geo", "t")) |> 
+  #   mutate(v = 1000 * nmig / pop)
+  data_iso <- plot_data("nmig", iso)$data
   
   map <- paste(
-    "The map shows where movements have taken place. Blue represents areas of",
-    "net in-migration while red represents areas of net out-immigration."
+    "In the map below, net migration is expressed relative to the local",
+    "population. Blue represents net in-migration per capita while",
+    "red represents net out-migration per capita. Because values",
+    "are relative, the dominance of one color or the other",
+    "does not necessarily signify the aggregate level of net migration."
   )
   
-  if (nrow(drop_na(data_iso, v)) == 0) {
+  if (nrow(drop_na(data_iso, .data$n)) == 0) {
     
     caption <- str_glue(paste(
       "The World Bank has no information on net migration for {name}.",
@@ -199,30 +248,35 @@ caption_nmig <- function(iso) {
     t1 <- max(data_iso$t) |> as.numeric()
     t0 <- t1 - 9
     
-    tot <- filter(data, t >= t0) |> 
-      summarise(nmig = sum(nmig), .by = geo) |> 
-      pull(nmig)
-    tot_iso <- filter(data_iso, geo == iso & t >= t0) |> 
-      summarise(nmig = sum(nmig), .by = geo) |> 
-      pull(nmig)
+    # tot <- filter(data, t >= t0) |> 
+    #   summarise(nmig = sum(nmig), .by = geo) |> 
+    #   pull(nmig)
+    # tot_iso <- filter(data_iso, geo == iso & t >= t0) |> 
+    #   summarise(nmig = sum(nmig), .by = geo) |> 
+    #   pull(nmig)
+    
+    min <- min(data_iso$n)
+    max <- max(data_iso$n)
     
     avg <- filter(data, t >= t0) |> 
-      summarise(v = mean(v), .by = geo) |> 
-      pull(v)
+      summarise(n = mean(n), .by = geo) |> 
+      pull(n)
     avg_iso <- filter(data, geo == iso & t >= t0) |> 
-      summarise(v = mean(v), .by = geo) |> 
-      pull(v)
+      summarise(n = mean(n), .by = geo) |> 
+      pull(n)
+    sign <- ifelse(avg_iso > 0, "+", "")
     
-    verb <- "entered"
-    if (tot_iso < 0) verb <- "left"
+    # verb <- "entered"
+    # if (tot_iso < 0) verb <- "left"
     
     caption <- str_glue(paste(
-      "According to the World Bank, a cumulative net total of",
-      "#b[{pl(abs(tot_iso))}] {get_pct(tot, tot_iso)} migrants have #b[{verb}]",
-      "{name} over {t0}–{t1}, or an average #b[{pl(avg_iso)}]",
-      "{get_pct(avg, avg_iso)} migrants for every 1,000 population per year.",
+      "- Annual net migration in {name} has ranged between #b[{ pl(min) }] and",
+      "#b[{ pl(max) }] over {t0}\u2013{t1} (positive values mean more people",
+      "are immigrating than emigrating; negative values mean the opposite).",
+      "The average annual net migration during that period was",
+      "#b[{ sign }{ pl(avg_iso) }] { get_pct(avg, avg_iso) }.\n",
       "#colbreak()\n",
-      "{map}"
+      "- {map}"
     ))
   }
   
@@ -291,7 +345,7 @@ caption_migpyr <- function(iso) {
     ))
     if (!is.na(data_emig_child_iso)) {
       caption_emig <- str_glue(paste(
-        " - Among emigrants from {name}, we estimate from UN DESA data that",
+        " - Among emigrants from {name}, IOM estimates from UN DESA data that",
         "#b[{pl_pct(data_emig_child_iso)}]",
         "{get_pct(data_emig_child$v, data_emig_child_iso)} were children (0-14),",
         "#b[{pl_pct(data_emig_work_iso)}]",
@@ -606,95 +660,126 @@ caption_idp <- function(iso) {
   
   if (nrow(data_iso) == 0) {
     
-    caption <- str_glue(paste(
-      " - Over {t0}–{t1}, IDMC reports no displacements caused by",
-      "natural disasters in {name}.\n",
-      " - There were also no reported displacements caused by conflicts."
-    ))
+    caption <- str_glue(
+      "#caption1[",
+      "Over {t0}\u2013{t1}, IDMC reports no internal displacements in {name}.",
+      "]"
+    )
     
     return(caption)
   }
   
-  data_agg <- summarise(data, n = sum(n), .by = c(geo, cause))
-  data_iso_agg <- summarise(data_iso, n = sum(n), .by = c(geo, cause))
+  data_all <- data |> 
+    mutate(cause = ifelse(cause == "conflict", "conflict", "disaster"))
   
-  data_agg_conflict <- filter(data_agg, cause == "conflict")
-  data_iso_agg_conflict <- filter(data_iso_agg, cause == "conflict")
+  # Totals
   
-  if (nrow(data_iso_agg_conflict) == 0) {
-    conflict <- str_glue(
-      "the IDMC reports no displacements caused by conflicts"
-    )
-  } else {
-    conflict <- str_glue(paste(
-      "conflicts caused a total of #b[{pl(data_iso_agg_conflict$n)}]",
-      "{get_pct(data_agg_conflict$n, data_iso_agg_conflict$n)}",
-      "displacements"
-    ))
-  }
+  agg_all <- data_all |> 
+    summarise(n = sum(n), .by = c(geo, cause)) |> 
+    complete(geo, cause, fill = list(n = 0))
   
-  data_iso_agg_disaster <- filter(data_iso_agg, cause != "conflict")
+  agg_conflict <- filter(agg_all, cause == "conflict")
+  agg_disaster <- filter(agg_all, cause == "disaster")
+  agg_iso_conflict <- filter(agg_conflict, geo == iso)$n
+  agg_iso_disaster <- filter(agg_disaster, geo == iso)$n
+  agg_iso <- agg_iso_conflict + agg_iso_disaster
   
-  if (nrow(data_iso_agg_disaster) == 0) {
-    disaster <- str_glue(
-      "Over {t0}–{t1}, IDMC reports no displacements caused by natural",
-      "disasters in {name}"
-    )
+  agg <- summarise(agg_all, n = sum(n), .by = geo)$n
+  
+  if (agg_iso_conflict == 0 & agg_iso_disaster > 0) {
+    
+    cause_text <- "All were caused by disasters."
+  
+  } else if (agg_iso_disaster == 0 & agg_iso_conflict > 0) {
+    
+    cause_text <- "All were caused by disasters."
+    
   } else {
     
-    data_iso_agg_top3 <- filter(data_iso_agg, cause != "conflict") |> 
+    cause_text <- str_glue(
+      "Of these, #b[{ pl(agg_iso_conflict) }] (or ",
+      "{ pl_pct(100 * agg_iso_conflict / agg_iso) }) were due to conflict and ",
+      "#b[{ pl(agg_iso_disaster) }] (or ",
+      "{ pl_pct(100 * agg_iso_disaster / agg_iso) }) were due to disasters."
+    )
+  }
+  
+  totals_text <- str_glue(
+    "IDMC recorded #b[{ pl(agg_iso) }] { get_pct(agg, agg_iso) } internal ",
+    "displacements in {name} over 2014\u20132023, equivalent to an annual ",
+    "average of { pl(agg_iso / 10) }. {cause_text}"
+  )
+  
+  if (agg_iso_disaster > 0) {
+    
+    disaster <- data |> 
+      filter(cause != "conflict") |> 
+      summarise(n = sum(n), .by = c(geo, cause))
+    
+    disaster_iso <- filter(disaster, geo == iso)
+    
+    disaster_iso_top3 <- disaster_iso |> 
       arrange(desc(n)) |> 
-      mutate(
-        rank = 1:n(),
-        cause_lab = case_when(
-          cause == "volcanic activity" ~ "volcanic activities",
-          .default = paste0(cause, "s")
-        )
-      ) |> 
-      filter(rank <= 3)
-    
-    data_agg_top1 <- filter(data_agg, cause == data_iso_agg_top3$cause[1])
-    data_agg_top2 <- filter(data_agg, cause == data_iso_agg_top3$cause[2])
-    data_agg_top3 <- filter(data_agg, cause == data_iso_agg_top3$cause[3])
-    
-    if (nrow(data_iso_agg_top3) == 1) {
-      natdis <- str_glue(paste(
-        "#b[{data_iso_agg_top3$cause_lab[1]}] caused a total of",
-        "#b[{pl(data_iso_agg_top3$n[1])}]", 
-        "{get_pct(data_agg_top1$n, data_iso_agg_top3$n[1])} displacements"
+      slice_head(n = 3) |> 
+      mutate(cause_lab = ifelse(
+        cause == "volcanic activity",
+        "Volcanic activities",
+        paste0(cause, "s")
       ))
+    
+    
+    if (nrow(disaster_iso_top3) == 1) {
+      
+      disaster_top1 <- filter(disaster, cause == disaster_iso_top3$cause[1])
+      
+      natdis <- str_glue(
+        "#b[{disaster_iso_top3$cause_lab[1]}] caused a total of",
+        "#b[{pl(disaster_iso_top3$n[1])}]", 
+        "{get_pct(disaster_top1$n, disaster_iso_top3$n[1])} displacements."
+      )
     }
-    if (nrow(data_iso_agg_top3) == 2) {
+    
+    if (nrow(disaster_iso_top3) == 2) {
+      
+      disaster_top1 <- filter(disaster, cause == disaster_iso_top3$cause[1])
+      disaster_top2 <- filter(disaster, cause == disaster_iso_top3$cause[2])
+      
       natdis <- str_glue(paste(
-        "#b[{data_iso_agg_top3$cause_lab[1]}] caused a total of",
-        "#b[{pl(data_iso_agg_top3$n[1])}]", 
-        "{get_pct(data_agg_top1$n, data_iso_agg_top3$n[1])} displacements and",
-        "#b[{data_iso_agg_top3$cause_lab[2]}] caused",
-        "#b[{pl(data_iso_agg_top3$n[2])}]", 
-        "{get_pct(data_agg_top1$n, data_iso_agg_top3$n[2])} displacements"
-      ))
-    }
-    if (nrow(data_iso_agg_top3) == 3) {
-      natdis <- str_glue(paste(
-        "#b[{data_iso_agg_top3$cause_lab[1]}] caused a total of",
-        "#b[{pl(data_iso_agg_top3$n[1])}]", 
-        "{get_pct(data_agg_top1$n, data_iso_agg_top3$n[1])} displacements,",
-        "#b[{data_iso_agg_top3$cause_lab[2]}] caused",
-        "#b[{pl(data_iso_agg_top3$n[2])}]", 
-        "{get_pct(data_agg_top1$n, data_iso_agg_top3$n[2])} displacements, and",
-        "#b[{data_iso_agg_top3$cause_lab[3]}] caused",
-        "#b[{pl(data_iso_agg_top3$n[3])}]", 
-        "{get_pct(data_agg_top1$n, data_iso_agg_top3$n[3])} displacements"
+        "#b[{ disaster_iso_top3$cause_lab[1] }] caused a total of",
+        "#b[{ pl(disaster_iso_top3$n[1]) }]", 
+        "{ get_pct(disaster_top1$n, disaster_iso_top3$n[1]) } displacements and",
+        "#b[{ disaster_iso_top3$cause_lab[2] }] caused",
+        "#b[{ pl(disaster_iso_top3$n[2]) }]", 
+        "{ get_pct(disaster_top2$n, disaster_iso_top3$n[2]) } displacements."
       ))
     }
     
-    disaster <- str_glue("Over {t0}–{t1}, the IDMC reports that {natdis}")
+    if (nrow(disaster_iso_top3) == 3) {
+      
+      disaster_top1 <- filter(disaster, cause == disaster_iso_top3$cause[1])
+      disaster_top2 <- filter(disaster, cause == disaster_iso_top3$cause[2])
+      disaster_top3 <- filter(disaster, cause == disaster_iso_top3$cause[3])
+      
+      natdis <- str_glue(
+        "#b[{ disaster_iso_top3$cause_lab[1] }] caused a total of ",
+        "#b[{ pl(disaster_iso_top3$n[1]) }] ", 
+        "{get_pct(disaster_top1$n, disaster_iso_top3$n[1])} displacements, ",
+        "#b[{ disaster_iso_top3$cause_lab[2] }] caused ",
+        "#b[{ pl(disaster_iso_top3$n[2]) }] ", 
+        "{ get_pct(disaster_top2$n, disaster_iso_top3$n[2]) } displacements, ",
+        "and #b[{ disaster_iso_top3$cause_lab[3] }] caused ",
+        "#b[{ pl(disaster_iso_top3$n[3]) }] ", 
+        "{ get_pct(disaster_top3$n, disaster_iso_top3$n[3]) } displacements."
+      )
+    }
   }
-  
+   
   caption <- str_glue(paste(
-    " - {disaster}.\n",
+    "#caption[",
+    " - {totals_text}\n",
     "#colbreak()\n",
-    " - Over the same period, {conflict}."
+    " - Among disasters, {natdis}",
+    "]"
   ))
   
   return(caption)
@@ -716,8 +801,8 @@ caption_mmp <- function(iso) {
   if (nrow(data_iso) == 0) {
     
     caption <- str_glue(paste(
-      " - In the territory of {name} over {t0}–{t1}, IOM recorded no deaths or",
-      "disappearances of people in the act of international migration.\n",
+      " - IOM recorded no deaths or disappearances of people in the act of",
+      "international migration in {name} over {t0}–{t1}.\n",
       "#colbreak()\n",
       " - Note that given severe data limitations, this does not imply that no",
       "migrant deaths occurred in this territory during this period."
@@ -1118,8 +1203,8 @@ caption_pop <- function(iso) {
     }
     caption <- str_glue(paste(
       "UN DESA estimates the population of {name} at #b[{data_iso_t1_lab}]",
-      "{get_pct(data_t1, data_iso_t1)} as of {t1}. The world median was",
-      "{pl(med_t1)}."
+      "{get_pct(data_t1, data_iso_t1)} as of {t1}. The global median across",
+      "countries was {pl(med_t1)}."
     ))
   }
   
@@ -1152,7 +1237,7 @@ caption_birth <- function(iso) {
     caption <- str_glue(paste(
       "The World Bank reports the {t1} birth rate at #b[{pl(data_iso_t1)}]",
       "{get_pct(data_t1, data_iso_t1)} live births per 1000 population. The",
-      "world median was {pl(med_t1)}."
+      "global median was {pl(med_t1)}."
     ))
   }
   
@@ -1187,7 +1272,7 @@ caption_depend <- function(iso) {
     caption <- str_glue(paste(
       "The World Bank reports #b[{pl(data_iso_t1)}]",
       "{get_pct(data_t1, data_iso_t1)} dependents (younger than 15, older than",
-      "64) per 100 working-age persons in {t1}. The world median was",
+      "64) per 100 working-age persons in {t1}. The global median was",
       "{pl(med_t1)}."
     ))
   }
@@ -1198,68 +1283,68 @@ caption_depend <- function(iso) {
 
 # Population pyramid ------------------------------------------------------
 
-caption_pyr <- function(iso) {
-  
-  name <- namer(iso)
-  
-  t1 <- max(gdidata::undesa_wpp$t)
-  
-  med <- filter(gdidata::undesa_wpp, t == max(t)) |> 
-    summarise(med = weighted.median(age, n), .by = geo)
-  med_iso <- filter(med, geo == iso) |> pull(med)
-  
-  age <- filter(gdidata::undesa_wpp, t == max(t)) |> 
-    mutate(age = case_when(
-      age %in% 0:14 ~ "children", 
-      age %in% 15:64 ~ "working", 
-      .default = "elderly" 
-    )) |> 
-    summarise(n = sum(n), .by = c(geo, age)) |> 
-    mutate(v = 100 * n / sum(n), .by = geo)
-  
-  sex <- filter(gdidata::undesa_wpp, t == max(t)) |> 
-    summarise(n = sum(n), .by = c(geo, sex)) |> 
-    mutate(v = 100 * n / sum(n), .by = geo) |> 
-    filter(sex == "female")
-  
-  age_iso <- filter(age, geo == iso)
-  sex_iso <- filter(sex, geo == iso)
-  
-  if (nrow(age_iso) == 0) {
-    
-    caption <- str_glue(
-      "UN DESA has no demographic information on the population of {name}."
-    )
-    
-  } else {
-    
-    age_child <- filter(age, age == "children")
-    age_work <- filter(age, age == "working")
-    age_elder <- filter(age, age == "elderly")
-    
-    age_child_iso <- filter(age_child, geo == iso) |> pull(v)
-    age_work_iso <- filter(age_work, geo == iso) |> pull(v)
-    age_elder_iso <- filter(age_elder, geo == iso) |> pull(v)
-    
-    sex_iso <- filter(sex, geo == iso) |> pull(v)
-    
-    caption <- str_glue(paste(
-      " - UN DESA estimates that the {t1} population of {name} comprised of",
-      "#b[{pl_pct(age_child_iso)}] {get_pct(age_child$v, age_child_iso)}",
-      "children (0-14), #b[{pl_pct(age_work_iso)}]",
-      "{get_pct(age_work$v, age_work_iso)} working age (15-64), and",
-      "#b[{pl_pct(age_elder_iso)}] {get_pct(age_elder$v, age_elder_iso)}",
-      "elderly (65+). The median age was #b[{pl(med_iso)}]",
-      "{get_pct(med$med, med_iso)}.\n",
-      "#colbreak()\n",
-      " - #b[{pl_pct(sex_iso)}] {get_pct(sex$v, sex_iso)} of the population",
-      "were female in {t1}.\n",
-      " - The map shows where populations are concentrated."
-    ))
-  }
-  
-  return(caption)
-}
+# caption_pyr <- function(iso) {
+#   
+#   name <- namer(iso)
+#   
+#   t1 <- max(gdidata::undesa_wpp$t)
+#   
+#   med <- filter(gdidata::undesa_wpp, t == max(t)) |> 
+#     summarise(med = weighted.median(age, n), .by = geo)
+#   med_iso <- filter(med, geo == iso) |> pull(med)
+#   
+#   age <- filter(gdidata::undesa_wpp, t == max(t)) |> 
+#     mutate(age = case_when(
+#       age %in% 0:14 ~ "children", 
+#       age %in% 15:64 ~ "working", 
+#       .default = "elderly" 
+#     )) |> 
+#     summarise(n = sum(n), .by = c(geo, age)) |> 
+#     mutate(v = 100 * n / sum(n), .by = geo)
+#   
+#   sex <- filter(gdidata::undesa_wpp, t == max(t)) |> 
+#     summarise(n = sum(n), .by = c(geo, sex)) |> 
+#     mutate(v = 100 * n / sum(n), .by = geo) |> 
+#     filter(sex == "female")
+#   
+#   age_iso <- filter(age, geo == iso)
+#   sex_iso <- filter(sex, geo == iso)
+#   
+#   if (nrow(age_iso) == 0) {
+#     
+#     caption <- str_glue(
+#       "UN DESA has no demographic information on the population of {name}."
+#     )
+#     
+#   } else {
+#     
+#     age_child <- filter(age, age == "children")
+#     age_work <- filter(age, age == "working")
+#     age_elder <- filter(age, age == "elderly")
+#     
+#     age_child_iso <- filter(age_child, geo == iso) |> pull(v)
+#     age_work_iso <- filter(age_work, geo == iso) |> pull(v)
+#     age_elder_iso <- filter(age_elder, geo == iso) |> pull(v)
+#     
+#     sex_iso <- filter(sex, geo == iso) |> pull(v)
+#     
+#     caption <- str_glue(paste(
+#       " - UN DESA estimates that the {t1} population of {name} comprised of",
+#       "#b[{pl_pct(age_child_iso)}] {get_pct(age_child$v, age_child_iso)}",
+#       "children (0-14), #b[{pl_pct(age_work_iso)}]",
+#       "{get_pct(age_work$v, age_work_iso)} working age (15-64), and",
+#       "#b[{pl_pct(age_elder_iso)}] {get_pct(age_elder$v, age_elder_iso)}",
+#       "elderly (65+). The median age was #b[{pl(med_iso)}]",
+#       "{get_pct(med$med, med_iso)}.\n",
+#       "#colbreak()\n",
+#       " - #b[{pl_pct(sex_iso)}] {get_pct(sex$v, sex_iso)} of the population",
+#       "were female in {t1}.\n",
+#       " - The map shows where populations are concentrated."
+#     ))
+#   }
+#   
+#   return(caption)
+# }
 
 
 # Income ------------------------------------------------------------------
@@ -1275,7 +1360,8 @@ caption_income <- function(iso) {
   if (nrow(data_iso) == 0) {
     
     caption <- str_glue(
-      "The World Bank has no data on GDP per capita for {name}."
+      "The World Bank has no data on per capita gross domestic product (GDP) ",
+      "for {name}."
     )
     
   } else {
@@ -1302,21 +1388,20 @@ caption_income <- function(iso) {
       )
     }
     
-    growth <- filter(data, t >= t1 - 10 & t <= t1) |> 
-      filter(t %in% c(min(t), max(t)), .by = geo) |> 
-      mutate(p = case_when(t == min(t) ~ "0", t == max(t) ~ "1"), .by = geo) |> 
-      pivot_wider(names_from = p, values_from = c(t, v), names_sep = "") |> 
-      mutate(growth = 100 * ((v1 / v0)^(1 / (t1 - t0)) - 1))
-    
-    growth_med <- median(growth$growth)
-    growth_iso <- filter(growth, geo == iso)$growth
+    # growth <- filter(data, t >= t1 - 10 & t <= t1) |> 
+    #   filter(t %in% c(min(t), max(t)), .by = geo) |> 
+    #   mutate(p = case_when(t == min(t) ~ "0", t == max(t) ~ "1"), .by = geo) |> 
+    #   pivot_wider(names_from = p, values_from = c(t, v), names_sep = "") |> 
+    #   mutate(growth = 100 * ((v1 / v0)^(1 / (t1 - t0)) - 1))
+    # 
+    # growth_med <- median(growth$growth)
+    # growth_iso <- filter(growth, geo == iso)$growth
     
     caption <- str_glue(paste(
-      "The World Bank reports that in constant 2021 international dollars,",
-      "the GDP per capita of {name} was #b[{data_iso_t1_lab}]",
-      "{get_pct(data_t1, data_iso_t1)} in {t1} (a change of",
-      "#b[{pl_pct1(growth_iso)}] {get_pct(growth$growth, growth_iso)} per",
-      "year). The world median was {pl_usd(med_t1)}."
+      "The World Bank reports that {name} had a per capita GDP",
+      "of #b[{data_iso_t1_lab}] {get_pct(data_t1, data_iso_t1)}",
+      "(in constant 2021 international USD) in {t1}. The global median",
+      "across countries was {pl_usd(med_t1)}."
     ))
   }
   
@@ -1358,17 +1443,16 @@ caption_unem <- function(iso) {
     data_iso_tL_latest <- filter(data_iso_latest, t == t1_latest - 1) |> 
       pull(v)
     
-    change <- round(data_iso_t1_latest - data_iso_tL_latest, digits = 1)
-    if (change == 0) verb <- "unchanged"
-    if (change > 0) verb <- "up"
-    if (change < 0) verb <- "down"
+    # change <- round(data_iso_t1_latest - data_iso_tL_latest, digits = 1)
+    # if (change == 0) verb <- "unchanged"
+    # if (change > 0) verb <- "up"
+    # if (change < 0) verb <- "down"
     
     caption <- str_glue(paste(
       "The ILO reports an unemployment rate of",
       "#b[{pl_pct1(data_iso_t1_latest)}]",
-      "{get_pct(data_t1_latest, data_iso_t1_latest)} in {t1_latest},",
-      "#b[{verb}] from {pl_pct1(data_iso_tL_latest)} the previous year. The",
-      "world median was {pl_pct1(med_t1)}."
+      "{get_pct(data_t1_latest, data_iso_t1_latest)} in {t1_latest}.",
+      "The global median was {pl_pct1(med_t1)}."
     ))
   }
   
@@ -1410,22 +1494,22 @@ caption_inf <- function(iso) {
     data_iso_tL_latest <- filter(data_iso_latest, t == t1_latest - 1) |> 
       pull(v)
     
-    change_text <- ""
-    if (length(data_iso_tL_latest) > 0) {
-      change <- round(data_iso_t1_latest - data_iso_tL_latest, digits = 1)
-      if (change == 0) verb <- "unchanged"
-      if (change > 0) verb <- "up"
-      if (change < 0) verb <- "down"
-      change_text <- str_glue(
-        ", #b[{verb}] from {pl_pct1(data_iso_tL_latest)} the previous year"
-      )
-    }
+    # change_text <- ""
+    # if (length(data_iso_tL_latest) > 0) {
+    #   change <- round(data_iso_t1_latest - data_iso_tL_latest, digits = 1)
+    #   if (change == 0) verb <- "unchanged"
+    #   if (change > 0) verb <- "up"
+    #   if (change < 0) verb <- "down"
+    #   change_text <- str_glue(
+    #     ", #b[{verb}] from {pl_pct1(data_iso_tL_latest)} the previous year"
+    #   )
+    # }
     
     caption <- str_glue(paste(
       "The World Bank reports an inflation rate of",
       "#b[{pl_pct1(data_iso_t1_latest)}]",
       "{get_pct(data_t1_latest, data_iso_t1_latest)} in",
-      "{t1_latest}{change_text}. The world median was {pl_pct1(med_t1)}."
+      "{t1_latest}. The world median was {pl_pct1(med_t1)}."
     ))
   }
   

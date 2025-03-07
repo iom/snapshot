@@ -64,7 +64,7 @@ plot_nmigmap <- function(hero,
   
   k <- function(factor = 1) factor * basesize / .pt
   
-  p_title <- "Map of net migration rate"
+  p_title <- "Map of net migration per capita"
   p_source <- "Source: Niva et al. (2023)."
   
   border_sub <- filter(admin1, adm0_a3 == hero) 
@@ -228,8 +228,8 @@ plot_nmigmap <- function(hero,
     plot <- ggdraw(
       plot + coord_sf(xlim = c(-125, -66), ylim = c(23, 50), expand = FALSE)
     ) +
-      draw_plot(ask, x = 0, y = .12, scale = .3, halign = 0, valign = 0) +
-      draw_plot(hwi, x = .25, y = .15, scale = .2, halign = 0, valign = 0)
+      cowplot::draw_plot(ask, x = 0, y = .12, scale = .3, halign = 0, valign = 0) +
+      cowplot::draw_plot(hwi, x = .25, y = .15, scale = .2, halign = 0, valign = 0)
   }
   
   plot_title <- ggplot() + 
@@ -442,8 +442,8 @@ plot_idpmap <- function(hero,
     plot <- ggdraw(
       plot + coord_sf(xlim = c(-125, -66), ylim = c(23, 50), expand = FALSE)
     ) +
-      draw_plot(ask, x = 0, y = .3, scale = .25, halign = 0, valign = 0) +
-      draw_plot(hwi, x = .2, y = .3, scale = .2, halign = 0, valign = 0)
+      cowplot::draw_plot(ask, x = 0, y = .3, scale = .25, halign = 0, valign = 0) +
+      cowplot::draw_plot(hwi, x = .2, y = .3, scale = .2, halign = 0, valign = 0)
   }
   
   plot_title <- ggplot() + ggtitle(title) +
@@ -723,8 +723,8 @@ plot_mmpmap <- function(hero,
       theme(plot.margin = margin(0, 0, 0, 0))
     
     plot <- ggdraw(mainland) +
-      draw_plot(alaska, x = 0, y = .3, scale = .25, halign = 0, valign = 0) +
-      draw_plot(hawaii, x = .2, y = .3, scale = .2, halign = 0, valign = 0)
+      cowplot::draw_plot(alaska, x = 0, y = .3, scale = .25, halign = 0, valign = 0) +
+      cowplot::draw_plot(hawaii, x = .2, y = .3, scale = .2, halign = 0, valign = 0)
   }
   
   plot_title <- ggplot() + ggtitle(title) +
@@ -902,8 +902,8 @@ plot_mmpmap <- function(hero,
 #     plot <- ggdraw(
 #       plot + coord_sf(xlim = c(-125, -66), ylim = c(23, 50), expand = FALSE)
 #     ) +
-#       draw_plot(ask, x = 0, y = .1, scale = .35, halign = 0, valign = 0) +
-#       draw_plot(hwi, x = .25, y = .15, scale = .2, halign = 0, valign = 0)
+#       cowplot::draw_plot(ask, x = 0, y = .1, scale = .35, halign = 0, valign = 0) +
+#       cowplot::draw_plot(hwi, x = .25, y = .15, scale = .2, halign = 0, valign = 0)
 #   }
 #   
 #   plot_title <- ggplot() + 
@@ -1085,8 +1085,8 @@ plot_mmpmap <- function(hero,
 #     plot <- ggdraw(
 #       plot + coord_sf(xlim = c(-125, -66), ylim = c(23, 50), expand = FALSE)
 #     ) +
-#       draw_plot(ask, x = 0, y = .1, scale = .35, halign = 0, valign = 0) +
-#       draw_plot(hwi, x = .25, y = .15, scale = .2, halign = 0, valign = 0)
+#       cowplot::draw_plot(ask, x = 0, y = .1, scale = .35, halign = 0, valign = 0) +
+#       cowplot::draw_plot(hwi, x = .25, y = .15, scale = .2, halign = 0, valign = 0)
 #   }
 #   
 #   plot_title <- ggplot() + 

@@ -10,17 +10,19 @@ plot_empty <- function(title,
 
   plot <- ggplot(data.frame(t = time), aes(x = .data$t)) +
     labs(title = title, caption = source) +
-    apply_theme(type = "line", basesize = basesize, font = font) +
+    apply_theme("line", basesize = basesize, font = font) +
     theme(
       axis.text = element_blank(),
       panel.background = element_rect(color = NA, fill = pal("unblues", 6)),
-      plot.margin = margin(k(2), k(2), k(2), k(2))
+      plot.caption = element_text(
+        margin = margin(t = k(), r = k(), l = k())
+      ),
     )
   
   plot <- ggdraw(plot) +
     draw_label(
       msg,
-      y = .55, 
+      y = .5, 
       fontfamily = font, 
       color = pal("blues", 3), 
       size = k(3)
@@ -36,20 +38,22 @@ plot_nmig <- function(hero,
                       basesize,
                       font,
                       title = paste0(
-                        "Net migration rate, ",
+                        "Net migration, ",
                         plot_data("nmig", hero)$range |>
                           paste(collapse = "\u2013")
                       )) {
   
   k <- function(factor = 1) factor * basesize / .pt
   source <- "Source: World Bank."
-  t0 <- plot_data("nmig", hero)$range[1]
-  t1 <- plot_data("nmig", hero)$range[2]
+  t0 <- plot_data("nmig",)$range[1]
+  t1 <- plot_data("nmig")$range[2]
   data <- plot_data("nmig", hero)$data
   
   if (nrow(data) > 0) {
     
-    plot <- ggplot(data, aes(x = .data$t, y = .data$v)) +
+    axis <- set_axis(data$n, "Persons")
+    
+    plot <- ggplot(data, aes(x = .data$t, y = .data$n)) +
       geom_bar(stat = "identity", width = .7, fill = pal("blues", 2)) +
       geom_hline(
         yintercept = 0,
@@ -63,7 +67,11 @@ plot_nmig <- function(hero,
         expand = expansion(mult = c(.03, .03)),
         guide = guide_axis(minor.ticks = TRUE)
       ) +
-      scale_y_continuous(name = "Migrants per 1000 population") +
+      scale_y_continuous(
+        name = axis$title,
+        breaks = axis$breaks,
+        labels = axis$labels
+      ) +
       guides(
         color = guide_legend(nrow = 2),
         linetype =  guide_legend(nrow = 2)
@@ -79,8 +87,6 @@ plot_nmig <- function(hero,
           color = pal("blues"),
           linewidth = k(.05)
         ),
-        legend.position = "none",
-        plot.margin = margin(k(2), k(2), k(2), k(2))
       )
     
   } else {
@@ -133,10 +139,9 @@ plot_remt <- function(hero,
     ),
     scale_fill_manual(values = vars),
     coord_cartesian(clip = "off"),
-    apply_theme(type = "line", basesize = basesize, font = font),
+    apply_theme("line", basesize = basesize, font = font),
     theme(
       axis.ticks.x = element_line(color = pal("blues"), linewidth = k(.05)),
-      plot.margin = margin(k(2), k(2), k(2), k(2))
     )
   )
   
@@ -268,10 +273,9 @@ plot_fdi <- function(hero,
     ),
     scale_fill_manual(values = vars),
     coord_cartesian(clip = "off"),
-    apply_theme(type = "line", basesize = basesize, font = font),
+    apply_theme("line", basesize = basesize, font = font),
     theme(
       axis.ticks.x = element_line(color = pal("blues"), linewidth = k(.05)),
-      plot.margin = margin(k(2), k(2), k(2), k(2))
     )
   )
   
@@ -394,7 +398,7 @@ plot_pop <- function(hero,
     df <- complete(
       data, 
       t = t0:t1, 
-      var = c(countryname(hero), "World median")
+      var = c(countryname(hero, to = "name_text"), "World median")
     )
     
     lab <- df |>
@@ -460,13 +464,11 @@ plot_pop <- function(hero,
           margin = margin(r = k(2))
         ),
         axis.ticks.x = element_line(color = pal("blues"), linewidth = k(.05)),
-        plot.margin = margin(k(0), k(2), k(2), k(2))
       )
     
   } else {
     
-    plot <- plot_empty(title, source, t0:t1, basesize, font) + 
-      theme(plot.margin = margin(0, k(2), k(2), k(2)))
+    plot <- plot_empty(title, source, t0:t1, basesize, font)
   }
   
   return(plot)
@@ -503,7 +505,7 @@ plot_birth <- function(hero,
     df <- complete(
       data, 
       t = t0:t1, 
-      var = c(countryname(hero), "World median")
+      var = c(countryname(hero, to = "name_text"), "World median")
     )
     
     lab <- df |>
@@ -567,13 +569,11 @@ plot_birth <- function(hero,
           margin = margin(r = k(2))
         ),
         axis.ticks.x = element_line(color = pal("blues"), linewidth = k(.05)),
-        plot.margin = margin(k(0), k(2), k(2), k(2))
       )
     
   } else {
     
-    plot <- plot_empty(title, source, t0:t1, basesize, font) + 
-      theme(plot.margin = margin(0, k(2), k(2), k(2)))
+    plot <- plot_empty(title, source, t0:t1, basesize, font)
   }
   
   return(plot)
@@ -610,7 +610,7 @@ plot_depend <- function(hero,
     df <- complete(
       data, 
       t = t0:t1, 
-      var = c(countryname(hero), "World median")
+      var = c(countryname(hero, to = "name_text"), "World median")
     )
     
     lab <- df |>
@@ -674,13 +674,11 @@ plot_depend <- function(hero,
           margin = margin(r = k(2))
         ),
         axis.ticks.x = element_line(color = pal("blues"), linewidth = k(.05)),
-        plot.margin = margin(k(0), k(2), k(2), k(2))
       )
     
   } else {
     
-    plot <- plot_empty(title, source, t0:t1, basesize, font) + 
-      theme(plot.margin = margin(0, k(2), k(2), k(2)))
+    plot <- plot_empty(title, source, t0:t1, basesize, font)
   }
   
   return(plot)
@@ -719,7 +717,7 @@ plot_income <- function(hero,
     df <- complete(
       data, 
       t = t0:t1, 
-      var = c(countryname(hero), "World median")
+      var = c(countryname(hero, to = "name_text"), "World median")
     )
     
     lab <- df |>
@@ -787,13 +785,11 @@ plot_income <- function(hero,
           margin = margin(r = k(2))
         ),
         axis.ticks.x = element_line(color = pal("blues"), linewidth = k(.05)),
-        plot.margin = margin(k(0), k(2), k(2), k(2))
       )
     
   } else {
     
-    plot <- plot_empty(title, source, t0:t1, basesize, font) + 
-      theme(plot.margin = margin(0, k(2), k(2), k(2)))
+    plot <- plot_empty(title, source, t0:t1, basesize, font)
   }
   
   return(plot)
@@ -830,7 +826,7 @@ plot_inf <- function(hero,
     df <- complete(
       data, 
       t = t0:t1, 
-      var = c(countryname(hero), "World median")
+      var = c(countryname(hero, to = "name_text"), "World median")
     )
     
     lab <- df |>
@@ -894,13 +890,11 @@ plot_inf <- function(hero,
           margin = margin(r = k(2))
         ),
         axis.ticks.x = element_line(color = pal("blues"), linewidth = k(.05)),
-        plot.margin = margin(k(0), k(2), k(2), k(2))
       )
     
   } else {
     
-    plot <- plot_empty(title, source, t0:t1, basesize, font) + 
-      theme(plot.margin = margin(0, k(2), k(2), k(2)))
+    plot <- plot_empty(title, source, t0:t1, basesize, font)
   }
   
   return(plot)
@@ -937,7 +931,7 @@ plot_unem <- function(hero,
     df <- complete(
       data, 
       t = t0:t1, 
-      var = c(countryname(hero), "World median")
+      var = c(countryname(hero, to = "name_text"), "World median")
     )
     
     lab <- df |>
@@ -1001,13 +995,11 @@ plot_unem <- function(hero,
           margin = margin(r = k(2))
         ),
         axis.ticks.x = element_line(color = pal("blues"), linewidth = k(.05)),
-        plot.margin = margin(k(0), k(2), k(2), k(2))
       )
     
   } else {
     
-    plot <- plot_empty(title, source, t0:t1, basesize, font) + 
-      theme(plot.margin = margin(0, k(2), k(2), k(2)))
+    plot <- plot_empty(title, source, t0:t1, basesize, font)
   }
   
   return(plot)

@@ -1,6 +1,27 @@
 
+
+# Parameters --------------------------------------------------------------
+
 basesize <- 7
 font <- "Gill Sans Nova"
+
+
+# Typst helpers -----------------------------------------------------------
+
+add_typst <- function(file, folder = "typ") {
+  readLines(paste0(folder, "/", file, ".typ")) |> 
+    paste(collapse = "\n")
+}
+
+fig <- function(N) {
+  output <- "#figure[→ Figures] "
+  if (length(N) == 1) output <- "#figure[→ Figure] "
+  for (n in N) output <- paste0(output, "#nbox[", n, "] ")
+  return(output)
+}
+
+
+# Chart helpers -----------------------------------------------------------
 
 idmc_iom <- c(
   "AFG",
@@ -30,11 +51,6 @@ idmc_iom <- c(
   "ZMB"
 )
 
-add_typst <- function(file, folder = "typ") {
-  readLines(paste0(folder, "/", file, ".typ")) |> 
-    paste(collapse = "\n")
-}
-
 namer <- function(iso, bold = FALSE) {
   
   if (is.null(iso)) {
@@ -44,6 +60,10 @@ namer <- function(iso, bold = FALSE) {
   } else {
   
     name_iso <- filter(gdidata::countrynames, iso3 == iso)
+    if (iso == "XKX") {
+      name_iso$with_the <- 0
+      name_iso$name_text <- "Kosovo"
+    }
     
     if (bold) {
       
@@ -61,7 +81,6 @@ namer <- function(iso, bold = FALSE) {
   
   return(name)
 }
-
 
 break_lines <- function(column) {
 
@@ -126,22 +145,22 @@ set_axis <- function(values, units = "Persons") {
   }
   if (max_n >= 1.20 * 10^6 & max_n < 1.40 * 10^6) {
     output$breaks <- seq(0, 1.25 * 10^6, .25 * 10^6)
-    output$labels <- c("0", "0.25", "0.50", "0.75", "1", "1.25")
+    output$labels <- c("0", "0.25", "0.50", "0.75", "1.00", "1.25")
   }
   if (max_n >= 1.40 * 10^6 & max_n < 1.80 * 10^6) {
     output$breaks <- seq(0, 1.50 * 10^6, .50 * 10^6)
-    output$labels <- c("0", "0.5", "1", "1.5")
+    output$labels <- c("0", "0.5", "1.0", "1.5")
   }
 
   if (max_n >= 1.20 * 10^9 & max_n < 1.40 * 10^9) {
     output$title <- write_title("Billions", units)
-    output$breaks <- seq(0, 1.25 * 10^9, .25 * 10^9)
-    output$labels <- c("0", "0.5", "1", "1.5")
+    output$breaks <- seq(0, 1.50 * 10^9, .25 * 10^9)
+    output$labels <- c("0", "0.25", "0.50", "0.75", "1.00", "1.25", "1.50")
   }
   if (max_n >= 1.40 * 10^9 & max_n < 1.80 * 10^9) {
     output$title <- write_title("Billions", units)
     output$breaks <- seq(0, 1.50 * 10^9, .50 * 10^9)
-    output$labels <- c("0", "0.5", "1", "1.5")
+    output$labels <- c("0", "0.5", "1.0", "1.5")
   }
   if (max_n >= 1.80 * 10^9) {
     output$title <- write_title("Billions", units)
@@ -150,37 +169,6 @@ set_axis <- function(values, units = "Persons") {
 
   return(output)
 }
-
-
-# # Helper functions for country brief generation
-# 
-# scale_labels <- function(N) {
-#   max <- max(N, na.rm = TRUE)
-#   if (max < 1200) {
-#     n <- pretty(N, d = 1, dotzero = FALSE)
-#   }
-#   if ((max >= 1200) & (max < 1200000)) {
-#     n <- pretty(N / 10^3, d = 1, dotzero = FALSE)
-#   }
-#   if (max >= 1200000) {
-#     n <- pretty(N / 10^6, d = 1, dotzero = FALSE)
-#   }
-#   return(n)
-# }
-# 
-# scale_title <- function(data) {
-#   if (max(data$v) < 1200) {
-#     title <- "persons"
-#   }
-#   if ((max(data$v) >= 1200) & (max(data$v) < 1200000)) {
-#     title <- "thousands of persons"
-#   }
-#   if (max(data$v) >= 1200000) {
-#     title <- "millions of persons"
-#   }
-#   return(title)
-# }
-
 
 plot_label <- function(plot, label, span = 2, h = .06) {
 
@@ -212,7 +200,6 @@ plot_label <- function(plot, label, span = 2, h = .06) {
       color = "white"
     )
 }
-
 
 kosovo_disclaimer <- function(hero) {
 

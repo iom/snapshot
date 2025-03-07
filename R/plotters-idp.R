@@ -1,4 +1,5 @@
 
+
 # IDPs --------------------------------------------------------------------
 
 plot_idp <- function(hero,
@@ -27,7 +28,11 @@ plot_idp <- function(hero,
   
   plot_elements <- list(
     geom_bar(
-      aes(x = factor(.data$t), y = .data$n, fill = forcats::fct_rev(.data$cause)),
+      aes(
+        x = factor(.data$t), 
+        y = .data$n, 
+        fill = forcats::fct_rev(.data$cause)
+      ),
       stat = "identity",
       position = "stack",
       width = .7
@@ -98,27 +103,34 @@ plot_idp <- function(hero,
 }
 
 
-
 # IDPs by cause -----------------------------------------------------------
 
-plot_idpcause <- function(hero) {
+plot_idcause <- function(hero,
+                          basesize,
+                          font,
+                          title = paste0(
+                            "Causes of new internal displacements\ndue to environmental impacts, ",
+                            plot_data("idcause")$range |>
+                              paste(collapse = "\u2013")
+                          )) {
   
   k <- function(factor = 1) factor * basesize / .pt
-  p_title <- "Causes of new internal displacements\ndue to environmental impacts"
-  p_source <- "Source: IDMC."
+  source <- "Source: IDMC."
   if (hero %in% idmc_iom) {
-    p_source <- "Source: IDMC; IOM Displacement Tracking Matrix."
+    source <- "Source: IDMC; IOM Displacement Tracking Matrix."
   }
   
-  data <- filter(gdidata::idmc_flows, t >= max(t) - 9 & cause != "conflict")
-  data_iso <- filter(data, geo == hero)
+  data <- plot_data("idcause", hero)$data
   
-  t0 <- min(data$t)
-  t1 <- max(data$t)
+  # data <- filter(gdidata::idmc_flows, t >= max(t) - 9 & cause != "conflict")
+  # data_iso <- filter(data, geo == hero)
   
-  if (nrow(data_iso) > 0) {
-    
-    # check <- data |> 
+  # t0 <- min(data$t)
+  # t1 <- max(data$t)
+  
+  if (nrow(data) > 0) {
+    # 
+    # df <- data_iso |> 
     #   summarise(n = sum(n), .by = c(geo, cause)) |> 
     #   arrange(desc(n)) |> 
     #   mutate(
@@ -128,27 +140,23 @@ plot_idpcause <- function(hero) {
     #       .default = paste0(
     #         toupper(substr(cause, 1, 1)), 
     #         substr(cause, 2, nchar(cause))
-    #       )),
-    #     .by = geo
+    #       ))
     #   ) |> 
     #   summarise(n = sum(n), .by = c(geo, cause)) |> 
-    #   pivot_wider(names_from = cause, values_from = n)
+    #   mutate(
+    #     v = n / sum(n),
+    #     ymax = cumsum(v),
+    #     ymin = c(0, ymax[-n()]),
+    #     pos = (ymax + ymin) / 2,
+    #     label = case_when(
+    #       v < 1 & v >= .995 ~ ">99%", 
+    #       v >= .02 ~ prettylabel(100 * v, pct = TRUE), 
+    #       .default = NA
+    #     )
+    #   )
     
-    df <- data_iso |> 
-      summarise(n = sum(n), .by = c(geo, cause)) |> 
-      arrange(desc(n)) |> 
+    df <- data |> 
       mutate(
-        rank = 1:n(),
-        cause = case_when(
-          rank >= 4 ~ "Others",
-          .default = paste0(
-            toupper(substr(cause, 1, 1)), 
-            substr(cause, 2, nchar(cause))
-          ))
-      ) |> 
-      summarise(n = sum(n), .by = c(geo, cause)) |> 
-      mutate(
-        v = n / sum(n),
         ymax = cumsum(v),
         ymin = c(0, ymax[-n()]),
         pos = (ymax + ymin) / 2,
@@ -167,6 +175,15 @@ plot_idpcause <- function(hero) {
       )
     ) +
       geom_rect() + 
+      geom_text(
+        aes(y = pos, label = label),
+        size = k(), color = "white", family = font, 
+        fontface = "bold", x = 3.5, hjust = .5, vjust = .5
+      ) +
+      
+      # Scales
+      scale_x_continuous(limits = c(2, 4)) + 
+      scale_y_continuous(expand = waiver()) +
       scale_fill_manual(values = c(
         pal("blues", 2),
         pal("greens"),
@@ -175,17 +192,8 @@ plot_idpcause <- function(hero) {
       )) +
       coord_polar(theta = "y") +
       
-      # Annotation
-      geom_text(
-        aes(y = pos, label = label),
-        size = k(), color = "white", family = font, 
-        fontface = "bold", x = 3.5, hjust = .5, vjust = .5
-      ) +
-      
       # Aesthetics
-      apply_theme(type = "bar-vertical", basesize = basesize, font = font) +
-      scale_x_continuous(limits = c(2, 4)) + 
-      scale_y_continuous(expand = waiver()) +
+      apply_theme("bar-vertical", basesize = basesize, font = font) +
       theme(
         axis.text = element_blank(),
         legend.text = element_text(
@@ -195,49 +203,49 @@ plot_idpcause <- function(hero) {
         panel.grid.major.y = element_blank()
       )
     
-    plot_title <- ggplot() + ggtitle(str_glue("{p_title}, {t0}–{t1}")) +
-      apply_theme(type = "map", basesize = basesize, font = font) + 
+    plot_title <- ggplot() + ggtitle(title) +
+      apply_theme("map", basesize = basesize, font = font) + 
       theme(plot.margin = margin(0, 0, 0, 0))
     
-    plot_caption <- ggplot() + labs(caption = p_source) +
-      apply_theme(type = "map", basesize = basesize, font = font) + 
+    plot_caption <- ggplot() + labs(caption = source) +
+      apply_theme("map", basesize = basesize, font = font) + 
       theme(plot.margin = margin(0, 0, 0, 0))
     
     plot <- plot_grid(
       plot_title, plot, plot_caption, 
-      nrow = 3, rel_heights = c(.05, 1, .05)
+      nrow = 3, rel_heights = c(.15, 1, .1)
     ) +
-      theme(plot.margin = margin(k(5), k(3), k(2), k(3)))
+      theme(plot.margin = margin(k(), k(2), k(), k(2)))
     
   } else {
     
     plot <- ggplot(
-      tibble(ymax = 1, ymin = 0), 
+      data.frame(ymax = 1, ymin = 0), 
       aes(xmax = 4, xmin = 3, ymax = ymax, ymin = ymin)
     ) +
       geom_rect(fill = pal("grays", 5)) +
-      coord_polar(theta = "y") +
-      apply_theme(type = "bar-vertical", basesize = basesize, font = font) +
       scale_x_continuous(limits = c(2, 4)) + 
       scale_y_continuous(expand = waiver()) +
+      coord_polar(theta = "y") +
+      apply_theme("bar-vertical", basesize = basesize, font = font) +
       theme(
         axis.text = element_blank(),
         panel.grid.major.y = element_blank()
       )
     
-    plot_title <- ggplot() + ggtitle(p_title) +
-      apply_theme(type = "map", basesize = basesize, font = font) + 
+    plot_title <- ggplot() + ggtitle(title) +
+      apply_theme("map", basesize = basesize, font = font) + 
       theme(plot.margin = margin(0, 0, 0, 0))
     
-    plot_caption <- ggplot() + labs(caption = p_source) +
-      apply_theme(type = "map", basesize = basesize, font = font) + 
+    plot_caption <- ggplot() + labs(caption = source) +
+      apply_theme("map", basesize = basesize, font = font) + 
       theme(plot.margin = margin(0, 0, 0, 0))
     
     plot <- plot_grid(
       plot_title, plot, plot_caption, 
-      nrow = 3, rel_heights = c(.05, 1, .05)
+      nrow = 3, rel_heights = c(.15, 1, .1)
     ) +
-      theme(plot.margin = margin(k(5), k(3), k(2), k(3)))
+      theme(plot.margin = margin(k(), k(2), k(), k(2)))
     
     plot <- ggdraw(plot) + 
       draw_label(

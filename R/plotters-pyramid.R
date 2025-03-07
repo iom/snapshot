@@ -96,18 +96,21 @@ plot_migpyr <- function(hero,
         expand = expansion(mult = .05)
       ) +
       scale_fill_manual(
-        name = "Migrant population",
+        name = "Migrant population:",
         labels = c("Male", "Female"),
         values = c(pal("blues", 3), pal("greens", 3))
       ) + 
       scale_color_manual(
-        name = "General population",
+        name = "General population:",
         labels = c("Male", "Female"),
         values = c(pal("blues"), pal("greens"))
       ) +
       
       theme(
-        legend.title = element_text(size = basesize),
+        legend.spacing.y = unit(10, "lines"),
+        legend.title = element_text(
+          size = basesize, margin = margin(r = -k(2))),
+        legend.text = element_text(margin = margin(r = -k(), l = k())),
         legend.position = "bottom",
         legend.justification.bottom = "right",
         legend.box.spacing = unit(0, "lines"),

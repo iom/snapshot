@@ -66,18 +66,21 @@ plot_data <- function(key, iso = NULL, ...) {
       
       output$data <- filter(output$data, .data$geo == iso)
       
-      output$print <- output$data |>
-        mutate(
-          country = gdidata::countryname(.data$geo),
-          panel = ifelse(.data$panel == "emig", "Emigrants", "Immigrants")
-        ) |>
-        select(.data$country, .data$panel, .data$region, .data$t, .data$n) |>
-        tidyr::pivot_wider(names_from = .data$region, values_from = .data$n) |>
-        rename(
-          Country = .data$country,
-          Panel = .data$panel,
-          Year = .data$t,
-        )
+      if (nrow(output$data) > 0) {
+        
+        output$print <- output$data |>
+          mutate(
+            country = gdidata::countryname(.data$geo),
+            panel = ifelse(.data$panel == "emig", "Emigrants", "Immigrants")
+          ) |>
+          select(.data$country, .data$panel, .data$region, .data$t, .data$n) |>
+          tidyr::pivot_wider(names_from = .data$region, values_from = .data$n) |>
+          rename(
+            Country = .data$country,
+            Panel = .data$panel,
+            Year = .data$t,
+          )
+      }
     }
     
     output$range <- ranger(dataset)
@@ -128,79 +131,82 @@ plot_data <- function(key, iso = NULL, ...) {
       arrange(desc(.data$n), .by_group = TRUE) |>
       ungroup()
     
-    destin <- filter(df, .data$panel == panel_dest) |>
-      slice_head(n = topn) |>
-      pull(.data$nat)
+    if (nrow(df) > 0) {
+      
+      destin <- filter(df, .data$panel == panel_dest) |>
+        slice_head(n = topn) |>
+        pull(.data$nat)
+      
+      origin <- filter(df, .data$panel == panel_orig) |>
+        slice_head(n = topn) |>
+        pull(.data$nat)
+      
+      destin_order <- gdidata::countryname(destin, to = "name_text") |> rev()
+      origin_order <- gdidata::countryname(origin, to = "name_text") |> rev()
+      
+      df_destin1 <- filter(df, .data$panel == panel_dest) |>
+        mutate(country = case_when(
+          .data$nat %in% destin ~
+            gdidata::countryname(.data$nat, from = "iso3", to = "name_text"),
+          .default = "Others"
+        )) |>
+        mutate(region = ifelse(
+          .data$country == "Others",
+          "Others",
+          .data$region
+        )) |>
+        summarise(
+          n = sum(.data$n),
+          .by = c(.data$panel, .data$country, .data$region)
+        )
+      
+      df_destin <- df_destin1 |>
+        arrange(match(.data$country, c("Others", destin_order)))
+      df_destin_print <- df_destin1 |>
+        arrange(match(.data$country, c(rev(destin_order), "Others"))) |>
+        rename(Destination = .data$country)
+      
+      df_origin1 <- filter(df, .data$panel == panel_orig) |>
+        mutate(country = case_when(
+          .data$nat %in% origin ~
+            gdidata::countryname(.data$nat, from = "iso3", to = "name_text"),
+          .default = "Others"
+        )) |>
+        mutate(region = ifelse(
+          .data$country == "Others",
+          "Others",
+          .data$region
+        )) |>
+        summarise(
+          n = sum(.data$n),
+          .by = c(.data$panel, .data$country, .data$region)
+        )
+      
+      df_origin <- df_origin1 |>
+        arrange(match(.data$country, c("Others", origin_order)))
+      df_origin_print <- df_origin1 |>
+        arrange(match(.data$country, c(rev(origin_order), "Others"))) |>
+        rename(Origin = .data$country)
+      
+      output$data <- bind_rows(df_destin, df_origin) |>
+        mutate(share = 100 * .data$n / sum(.data$n), .by = .data$panel)
+      
+      output$print <- bind_rows(df_destin_print, df_origin_print) |>
+        mutate(
+          Country = gdidata::countryname(iso, to = "name_text"),
+          share = .data$n / sum(.data$n), .by = .data$panel
+        ) |>
+        select(
+          .data$Country,
+          .data$Destination,
+          .data$Origin,
+          Region = .data$region,
+          Count = .data$n,
+          Share = .data$share
+        )
+    }
     
-    origin <- filter(df, .data$panel == panel_orig) |>
-      slice_head(n = topn) |>
-      pull(.data$nat)
-    
-    destin_order <- gdidata::countryname(destin, to = "name_text") |> rev()
-    origin_order <- gdidata::countryname(origin, to = "name_text") |> rev()
-    
-    df_destin1 <- filter(df, .data$panel == panel_dest) |>
-      mutate(country = case_when(
-        .data$nat %in% destin ~
-          gdidata::countryname(.data$nat, from = "iso3", to = "name_text"),
-        .default = "Others"
-      )) |>
-      mutate(region = ifelse(
-        .data$country == "Others",
-        "Others",
-        .data$region
-      )) |>
-      summarise(
-        n = sum(.data$n),
-        .by = c(.data$panel, .data$country, .data$region)
-      )
-    
-    df_destin <- df_destin1 |>
-      arrange(match(.data$country, c("Others", destin_order)))
-    df_destin_print <- df_destin1 |>
-      arrange(match(.data$country, c(rev(destin_order), "Others"))) |>
-      rename(Destination = .data$country)
-    
-    df_origin1 <- filter(df, .data$panel == panel_orig) |>
-      mutate(country = case_when(
-        .data$nat %in% origin ~
-          gdidata::countryname(.data$nat, from = "iso3", to = "name_text"),
-        .default = "Others"
-      )) |>
-      mutate(region = ifelse(
-        .data$country == "Others",
-        "Others",
-        .data$region
-      )) |>
-      summarise(
-        n = sum(.data$n),
-        .by = c(.data$panel, .data$country, .data$region)
-      )
-    
-    df_origin <- df_origin1 |>
-      arrange(match(.data$country, c("Others", origin_order)))
-    df_origin_print <- df_origin1 |>
-      arrange(match(.data$country, c(rev(origin_order), "Others"))) |>
-      rename(Origin = .data$country)
-    
-    output$data <- bind_rows(df_destin, df_origin) |>
-      mutate(share = 100 * .data$n / sum(.data$n), .by = .data$panel)
-    
-    output$print <- bind_rows(df_destin_print, df_origin_print) |>
-      mutate(
-        Country = gdidata::countryname(iso, to = "name_text"),
-        share = .data$n / sum(.data$n), .by = .data$panel
-      ) |>
-      select(
-        .data$Country,
-        .data$Destination,
-        .data$Origin,
-        Region = .data$region,
-        Count = .data$n,
-        Share = .data$share
-      )
-    
-    output$range <- max(df$t)
+    output$range <- max(dataset$t)
   }
   
   
@@ -208,30 +214,31 @@ plot_data <- function(key, iso = NULL, ...) {
   
   if (key == "nmig") {
     
-    nmig <- filter(gdidata::wdi, .data$var == "nmig") |>
-      rename(nmig = .data$v) |>
-      select(-.data$var)
-    pop <- filter(gdidata::wdi, .data$var == "pop") |>
-      rename(pop = .data$v) |>
-      select(-.data$var)
-    data <- inner_join(nmig, pop, by = c("geo", "t")) |>
-      mutate(v = 1000 * .data$nmig / .data$pop)
+    output$data <- filter(gdidata::wdi, .data$var == "nmig") |>
+      rename(n = .data$v)
     
-    output$data <- filter(data, .data$geo == iso)
+    output$range <- ranger(output$data)
     
-    if (nrow(output$data) > 0) {
-      output$print <- output$data |>
-        mutate(country = gdidata::countryname(.data$geo, to = "name_text")) |>
-        select(
-          Country = .data$country,
-          Year = .data$t,
-          `Net migration` = .data$nmig,
-          Population = .data$pop,
-          `Net migrants per 1000 population` = .data$v
-        )
+    # pop <- filter(gdidata::wdi, .data$var == "pop") |>
+    #   rename(pop = .data$v) |>
+    #   select(-.data$var)
+    # data <- inner_join(nmig, pop, by = c("geo", "t")) |>
+    #   mutate(v = 1000 * .data$nmig / .data$pop)
+    
+    if (!is.null(iso)) {
+      
+      output$data <- filter(output$data, .data$geo == iso)
+      
+      if (nrow(output$data) > 0) {
+        output$print <- output$data |>
+          mutate(country = gdidata::countryname(.data$geo, to = "name_text")) |>
+          select(
+            Country = .data$country,
+            Year = .data$t,
+            `Net migration` = .data$n,
+          )
+      }
     }
-    
-    output$range <- ranger(data)
   }
   
   
@@ -245,14 +252,15 @@ plot_data <- function(key, iso = NULL, ...) {
       mutate(cause = ifelse(
         .data$cause == "conflict",
         causes[2],
-        causes[1])
-      ) |>
+        causes[1]
+      )) |>
       summarise(
         n = sum(.data$n),
         .by = c(.data$geo, .data$t, .data$cause)
       )
     
     if (nrow(output$data) > 0) {
+      
       output$print <- output$data |>
         mutate(Country = gdidata::countryname(.data$geo, to = "name_sort")) |>
         select(.data$Country, Year = .data$t, .data$cause, .data$n) |>
@@ -261,6 +269,39 @@ plot_data <- function(key, iso = NULL, ...) {
     }
     
     output$range <- ranger(gdidata::idmc_flows)
+  }
+  
+  if (key == "idcause") {
+    
+    output$data <- gdidata::idmc_flows |> 
+      filter(.data$t >= max(.data$t) - 9, .data$cause != "conflict") |> 
+      summarise(n = sum(.data$n), .by = c(.data$geo, .data$cause)) |> 
+      group_by(.data$geo) |> 
+      arrange(desc(.data$n), by_group = TRUE) |> 
+      mutate(
+        rank = 1:n(),
+        cause = ifelse(
+          .data$rank >= 4,
+          "Others",
+          paste0(
+            toupper(substr(.data$cause, 1, 1)), 
+            substr(cause, 2, nchar(.data$cause))
+          ))
+      ) |> 
+      ungroup() |> 
+      summarise(n = sum(.data$n), .by = c(.data$geo, .data$cause)) |> 
+      mutate(v = .data$n / sum(.data$n), .by = .data$geo) |> 
+      arrange(.data$geo, desc(.data$n))
+    
+    if (!is.null(iso)) {
+      
+      output$data <- filter(output$data, .data$geo == iso)
+    }
+    
+    output$range <- c(
+      max(gdidata::idmc_flows$t) - 9,
+      max(gdidata::idmc_flows$t)
+    )
   }
   
   
@@ -357,66 +398,77 @@ plot_data <- function(key, iso = NULL, ...) {
     } else {
       
       orig <- filter(dataset, .data$from == iso)
-      orig_top_t1 <- filter(orig, .data$t == max(t)) |>
-        arrange(desc(.data$n)) |>
-        slice_head(n = 3)
-      orig_top_names <- gdidata::countryname(orig_top_t1$geo, to = "name_text")
-      orig <- orig |>
-        mutate(
-          nat = ifelse(.data$geo %in% orig_top_t1$geo, .data$geo, "Others"),
-          nat_name = ifelse(
-            .data$nat == "Others",
-            .data$nat, 
-            countryname(.data$nat, to = "name_text") |> suppressWarnings()
-          )
-        ) |>
-        summarise(
-          n = sum(.data$n), 
-          .by = c(.data$nat, .data$nat_name, .data$t)
-        ) |>
-        mutate(panel = "orig") |>
-        complete(
-          t = years,
-          tidyr::nesting(nat, nat_name, panel),
-          fill = list(n = 0)
-        )
       
+      if (nrow(orig) > 0) {
+        
+        orig_top_t1 <- filter(orig, .data$t == max(t)) |>
+          arrange(desc(.data$n)) |>
+          slice_head(n = 3)
+        orig_top_names <- gdidata::countryname(orig_top_t1$geo, to = "name_text")
+        orig <- orig |>
+          mutate(
+            nat = ifelse(.data$geo %in% orig_top_t1$geo, .data$geo, "Others"),
+            nat_name = ifelse(
+              .data$nat == "Others",
+              .data$nat, 
+              countryname(.data$nat, to = "name_text") |> suppressWarnings()
+            )
+          ) |>
+          summarise(
+            n = sum(.data$n), 
+            .by = c(.data$nat, .data$nat_name, .data$t)
+          ) |>
+          mutate(panel = "orig") |>
+          complete(
+            t = years,
+            tidyr::nesting(nat, nat_name, panel),
+            fill = list(n = 0)
+          )
+        
+      } else orig_top_names <- ""
+
       host <- filter(dataset, .data$geo == iso)
-      host_without_unknown <- filter(host, .data$from != "OOO")
-      host_top_t1 <- filter(host_without_unknown, .data$t == max(t)) |>
-        arrange(desc(.data$n)) |>
-        slice_head(n = 3)
-      host_top_names <- gdidata::countryname(host_top_t1$from, to = "name_text")
-      host <- host |>
-        mutate(
-          nat = case_when(
-            .data$from %in% c(host_top_t1$from, "OOO") ~ .data$from, 
-            .default = "Others"
-          ),
-          nat_name = ifelse(
-            .data$nat == "Others",
-            .data$nat, 
-            countryname(.data$nat, to = "name_text") |> suppressWarnings()
-          )
-        ) |>
-        summarise(
-          n = sum(.data$n), 
-          .by = c(.data$nat, .data$nat_name, .data$t)
-        ) |>
-        mutate(panel = "host") |>
-        complete(
-          t = years,
-          tidyr::nesting(nat, nat_name, panel),
-          fill = list(n = 0)
-        )
       
-      output$data <- bind_rows(orig, host) |>
-        mutate(nat_name = factor(.data$nat_name, levels = c(
-          unique(c(orig_top_names, host_top_names)),
-          "Unknown", "Others"
-        )))
+      if (nrow(host) > 0) {
+
+        host_without_unknown <- filter(host, .data$from != "OOO")
+        host_top_t1 <- filter(host_without_unknown, .data$t == max(t)) |>
+          arrange(desc(.data$n)) |>
+          slice_head(n = 3)
+        host_top_names <- gdidata::countryname(host_top_t1$from, to = "name_text")
+        host <- host |>
+          mutate(
+            nat = case_when(
+              .data$from %in% c(host_top_t1$from, "OOO") ~ .data$from, 
+              .default = "Others"
+            ),
+            nat_name = ifelse(
+              .data$nat == "Others",
+              .data$nat, 
+              countryname(.data$nat, to = "name_text") |> suppressWarnings()
+            )
+          ) |>
+          summarise(
+            n = sum(.data$n), 
+            .by = c(.data$nat, .data$nat_name, .data$t)
+          ) |>
+          mutate(panel = "host") |>
+          complete(
+            t = years,
+            tidyr::nesting(nat, nat_name, panel),
+            fill = list(n = 0)
+          )
+      } else host_top_names <- NULL
+        
+      output$data <- bind_rows(orig, host)
       
       if (nrow(output$data) > 0) {
+        
+        output$data <- output$data |>
+          mutate(nat_name = factor(.data$nat_name, levels = c(
+            unique(c(orig_top_names, host_top_names)),
+            "Unknown", "Others"
+          )))
         
         agg <- output$data |>
           summarise(n = sum(.data$n), .by = c(.data$t, .data$panel)) |>
@@ -429,8 +481,7 @@ plot_data <- function(key, iso = NULL, ...) {
           pivot_wider(names_from = .data$nat_name, values_from = .data$n) |>
           select(
             "Panel", "Year", "Total",
-            all_of(orig_top_names),
-            all_of(host_top_names),
+            all_of(c(orig_top_names, host_top_names)),
             "Others"
           )
       }

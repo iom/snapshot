@@ -1,5 +1,6 @@
 
-render_snapshot <- function(iso, version = "1.0.0") {
+render_snapshot <- function(iso) {
+  devtools::load_all(".")
   cat(build(iso, version), file = "_temp.qmd")
   quarto::quarto_render("_temp.qmd")
   unlink("_temp*")
@@ -25,7 +26,6 @@ build <- function(iso, version) {
 title: "{name}"
 output-file: "{filename}"
 iso: {iso}
-version: {version}
 execute:
   echo: false
 warning: false
@@ -35,7 +35,7 @@ format:
   )
   
   text <- readLines("template.qmd")
-  text <- text[-(1:11)]
+  text <- text[-(1:10)]
   text <- paste(text, collapse = "\n")
   
   return(paste0(yaml, "\n", text))

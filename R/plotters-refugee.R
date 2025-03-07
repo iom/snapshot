@@ -17,40 +17,18 @@ plot_refug <- function(hero,
   orig_disp <- paste0("Refugees from ", name, "\nand where they are hosted")
   host_disp <- paste0("Refugees hosted in ", name, "\nand where they come from")
   
-  data <- plot_data("refug", hero)$data |>
-    mutate(panel = ifelse(.data$panel == "orig", orig_disp, host_disp))
-  nats <- levels(data$nat_name)[
-    !(levels(data$nat_name) %in% c("Unknown", "Others"))
-  ]
-  
-  colors <- c(
-    pal("blues", 2),
-    pal("oranges", 2),
-    pal("reds", 2),
-    pal("unblues", 2),
-    pal("greens"),
-    pal("yellows", 2)
-  )
-  
-  nat_fill <- colors[1:length(nats)]
-  names(nat_fill) <- nats
-  nat_fill <- c(
-    nat_fill, 
-    "Unknown" = pal("grays", 3),
-    "Others" = pal("grays", 4)
-  )
+  timespan <- unique(plot_data("refug")$data$t) |> sort()
+  data <- plot_data("refug", hero)$data
   
   plot_elements <- list(
     facet_wrap(~forcats::fct_relevel(.data$panel, host_disp, after = Inf)),
     labs(title = title, caption = source),
     scale_x_discrete(expand = expansion(mult = .05)),
-    scale_fill_manual(values = nat_fill),
     guides(fill = guide_legend(nrow = 2)),
     apply_theme("bar-vertical", basesize = basesize, font = font, facets = TRUE),
     theme(
       legend.position = "bottom",
       panel.spacing.x = unit(k(.6), "lines"),
-      plot.margin = margin(k(2), 0, k(2), k(2)),
       strip.text = element_text(
         size = basesize,
         margin = margin(t = 0, b = k())
@@ -60,26 +38,61 @@ plot_refug <- function(hero,
   
   if (nrow(data) > 0) {
     
-    data_tot <- data |>
-      summarise(n = sum(.data$n), .by = c(.data$t, .data$panel)) |>
-      mutate(lab = prettylabel(.data$n))
-    axis <- set_axis(data_tot$n, "Persons")
+    df <- data |>
+      mutate(panel = ifelse(.data$panel == "orig", orig_disp, host_disp)) |> 
+      complete(
+        t = timespan, 
+        panel = c(orig_disp, host_disp),
+        fill = list(nat_name = "Unknown", n = 0)
+      )
+
+    nats <- levels(df$nat_name)[
+      !(levels(df$nat_name) %in% c("Unknown", "Others"))
+    ]
     
-    plot <- ggplot(data, aes(x = factor(.data$t), y = .data$n)) +
+    colors <- c(
+      pal("blues", 2),
+      pal("oranges", 2),
+      pal("reds", 2),
+      pal("unblues", 2),
+      pal("greens"),
+      pal("yellows", 2)
+    )
+    
+    nat_fill <- colors[1:length(nats)]
+    names(nat_fill) <- nats
+    nat_fill <- c(
+      nat_fill, 
+      "Unknown" = pal("grays", 3),
+      "Others" = pal("grays", 4)
+    )
+    
+    df_tot <- df |>
+      summarise(n = sum(.data$n), .by = c(.data$t, .data$panel)) |>
+      mutate(lab = ifelse(.data$n == 0, "", prettylabel(.data$n)))
+    
+    axis <- set_axis(df_tot$n, "Persons")
+    
+    plot <- ggplot(df, aes(x = factor(.data$t), y = .data$n)) +
       geom_bar(
         aes(fill = .data$nat_name),
         stat = "identity", position = "stack", width = .8
       ) +
+      geom_hline(
+        yintercept = 0,
+        color = pal("blues"),
+        linewidth = k(.1)
+      ) +
       plot_elements +
       geom_text(
-        aes(x = factor(.data$t), y = .data$n, label = prettylabel(.data$n)),
-        data_tot,
+        aes(x = factor(.data$t), y = .data$n, label = .data$lab),
+        df_tot,
         color = pal("blues"),
         family = font,
         fontface = "bold",
         size = k(.8),
         vjust = 0,
-        nudge_y = max(data_tot$n, na.rm = TRUE) / 40
+        nudge_y = max(df_tot$n, na.rm = TRUE) / 40
       ) +
       scale_y_continuous(
         name = axis$title,
@@ -87,6 +100,7 @@ plot_refug <- function(hero,
         labels = axis$labels,
         expand = expansion(mult = c(0, .05))
       ) +
+      scale_fill_manual(values = nat_fill) +
       theme(axis.title.y = element_text(
         size = basesize,
         margin = margin(r = k(2))
@@ -95,7 +109,6 @@ plot_refug <- function(hero,
   } else {
     
     df <- expand.grid(
-      region = names(regions),
       t = c(
         seq(min(gdidata::unhcr$t), max(gdidata::unhcr$t), 5),
         max(gdidata::unhcr$t)
@@ -108,7 +121,7 @@ plot_refug <- function(hero,
       geom_bar(stat = "identity") +
       plot_elements +
       theme(
-        axis.text.y = element_blank(),
+        axis.text = element_blank(),
         axis.ticks.x = element_blank(),
         panel.background = element_rect(color = NA, fill = pal("unblues", 6)),
         panel.grid.major.y = element_blank(),
@@ -117,7 +130,7 @@ plot_refug <- function(hero,
     plot <- ggdraw(plot) +
       draw_label(
         "No data",
-        x = .2240,
+        x = .250,
         y = .5,
         fontfamily = font,
         color = pal("blues", 3),
@@ -125,7 +138,7 @@ plot_refug <- function(hero,
       ) +
       draw_label(
         "No data",
-        x = .6575,
+        x = .750,
         y = .5,
         fontfamily = font,
         color = pal("blues", 3),
