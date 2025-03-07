@@ -1,8 +1,7 @@
 ---
-title: "Bolivarian Republic of Venezuela"
+title: "Germany"
 output-file: "venezuela"
 iso: "VEN"
-version: "2.0.0"
 execute:
   echo: false
   warning: false
@@ -16,6 +15,7 @@ devtools::load_all(".")
 knitr::opts_chunk$set(dev = "svglite")
 code <- rmarkdown::metadata$iso
 i <- 1
+j <- 0
 ```
 
 ```{=typst}
@@ -28,30 +28,31 @@ i <- 1
   box(fill: rgb("#f4f8fd"), inset: .8em)[
     #h0[ABOUT]
     #about[
-      The #b[Country Data Snapshot] offers a curated roundup of migration-related statistics pulled from an assortment of distinguished data providers, packaged into a concise, user-friendly document. 
+      #abouthead[This #b[Country Data Snapshot] is a brief overview of migration-related statistics from global datasets compiled by UN agencies and other international organisations.]
       
-      Note that these are subject to inherent limitations of global datasets and should be considered as statistical baselines, especially in the absence of more precise local data. Figures here may differ from those published by national statistics offices or other sources. Users are encouraged to consult alternative sources relevant to their specific use case when available. For more information, see our #link("https://google.com/")[Data Appendix].
-    ]
+      #aboutnotes[Maps are for illustration purposes only. The boundaries and names shown and the designations used on maps do not imply official endorsement or acceptance by IOM. `r kosovo_disclaimer(code)`
+        
+        Data are subject to the inherent limitations of global datasets and should be considered as statistical baselines, especially in the absence of more precise local data. Figures may differ from those published by national statistics offices or other sources. For more information and additional context for each of the datasets used here, see our #link("")[Data Appendix].]]
   ],
   none,
   box(inset: .8em)[
     #h0[CONTENTS]
     #contents[
-      - How many emigrants and immigrants are there? What are their destinations and origins? What is their age and sex structure? #figure[→ Figures] #nbox[1] #nbox[2] #nbox[3]
+      - How many emigrants and immigrants are there? What are their destinations and origins? What is their age and sex structure? `r fig(1:3)`
       
-      - What are trends and patterns of net migration? #figure[→ Figures] #nbox[4] #nbox[5]
+      - What are trends and patterns of net migration? `r fig(4:5)`
       
-      - When and where have migrants died or gone missing? #figure[→ Figures] #nbox[6] #nbox[7]
+      - When and where have displacements occurred? What are the causes? `r fig(6:8)`
       
-      - When and where have displacements occurred? What are the causes? #figure[→ Figures] #nbox[8] #nbox[9] #nbox[10]
+      - When and where have migrants died or gone missing? `r fig(9:10)`
       
-      - How many refugees are there? #figure[→ Figures] #nbox[11]
+      - How many refugees are there? `r fig(11)`
       
-      - How large are remittances and foreign direct investment? #figure[→ Figures] #nbox[12] #nbox[13]
+      - How large are remittances and foreign direct investment? `r fig(12:13)`
       
-      - What are the demographic features of the overall population? #figure[→ Figures] #nbox[14] #nbox[15] #nbox[16]
+      - What are the demographic features of the overall population? `r fig(14:16)`
       
-      - How have economic indicators developed? #figure[→ Figures] #nbox[17] #nbox[18] #nbox[19]
+      - How have economic indicators developed? `r fig(17:19)`
     ]
   ],
 )
@@ -62,12 +63,7 @@ i <- 1
 ```
 
 ```{=typst}
-#caption[
-`r caption_stocks_emig(code)`
-#colbreak()
-`r caption_stocks_immig(code)`
-- These numbers include refugees but do not include irregular migrants. 
-]
+`r caption_stocks(code)`
 ```
 
 ```{r}
@@ -128,6 +124,39 @@ i <- i + 2
 ```
 
 ```{=typst}
+`r caption_idp(code)`
+```
+
+```{r}
+#| fig-width: 6.7
+#| fig-height: 2.25
+#| message: false
+
+snap_plot("idp", code, basesize = basesize, font = font) |> 
+  plot_label(i, span = 1, h = .15 / 2.25)
+i <- i + 1
+```
+
+```{=typst}
+///////////////////////////////////////////////////////////////////// PAGE 3 ⬇️
+#pagebreak()
+```
+
+```{r}
+#| fig-width: 6.7
+#| fig-height: 2.75
+#| message: false
+
+cowplot::plot_grid(
+  plot_idpmap(code, basesize = basesize) |> 
+    plot_label(i, h = .15 / 2.75),
+  snap_plot("idcause", code, basesize = basesize, font = font) |> 
+    plot_label(i + 1, h = .15 / 2.75)
+)
+i <- i + 2
+```
+
+```{=typst}
 #caption[`r caption_mmp(code)`]
 ```
 
@@ -141,38 +170,6 @@ cowplot::plot_grid(
     plot_label(i, h = .15 / 2.50),
   plot_mmpmap(code, basesize = basesize) |> 
     plot_label(i + 1, h = .15 / 2.50)
-)
-i <- i + 2
-```
-
-```{=typst}
-///////////////////////////////////////////////////////////////////// PAGE 3 ⬇️
-#pagebreak()
-```
-
-
-```{=typst}
-#caption[`r caption_idp(code)`]
-```
-
-```{r}
-#| fig-width: 6.7
-#| fig-height: 2.25
-#| message: false
-
-snap_plot("idp", code, basesize = basesize, font = font) |> 
-  plot_label(i, span = 1, h = .15 / 2.25)
-i <- i + 1
-```
-
-```{r}
-#| fig-width: 6.7
-#| fig-height: 3.0
-#| message: false
-
-cowplot::plot_grid(
-  plot_idpmap(code, basesize = basesize) |> plot_label(i, h = .15 / 3.0),
-  plot_idpcause(code) |> plot_label(i + 1, h = .15 / 3.0)
 )
 i <- i + 2
 ```
@@ -312,5 +309,5 @@ i <- i + 3
 ```
 
 ```{=typst}
-#endnote[This Country Data Snapshot was prepared by the Global Data Institute (GDI) of the International Organization for Migration (IOM) using the publishing system Quarto. Charts and captions were generated using R and layouting was done using Typst. Maps are for illustration purposes only. The boundaries and names shown and the designations used on maps do not imply official endorsement or acceptance by IOM. `r kosovo_disclaimer(code)`For questions and suggestions, contact Robert Beyer (rbeyer\@iom.int) or Kenneth S. Reyes (kereyes\@iom.int). #text(size: .75em, fill: rgb("#B3C2E3"))[v.`r rmarkdown::metadata$version`]]
+#endnote[This Country Data Snapshot was prepared by the Global Data Institute (GDI) of the International Organization for Migration (IOM) using the publishing system Quarto. Charts and captions were generated using R and layouting was done using Typst. For questions and suggestions, contact Robert Beyer (rbeyer\@iom.int) or Kenneth S. Reyes (kereyes\@iom.int). #text(size: .75em, fill: rgb("#B3C2E3"))[v.`r packageVersion("snapshot")`]]
 ```

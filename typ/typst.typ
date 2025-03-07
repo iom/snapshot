@@ -1,4 +1,5 @@
 
+
 #let b(body) = {
   set text(weight: "bold", fill: rgb("#0033A0"))
   [#body]
@@ -9,9 +10,22 @@
 //// About
 
 #let about(body) = {
-  set text(size: .7em)
-  set par(leading: .575em)
+  set par(justify: true)
+  set block(spacing: .85em)
   pad(bottom: 3pt, body)
+}
+
+#let abouthead(body) = {
+  set text(size: .825em)
+  set par(leading: .475em)
+  block(width: 100%)[#body]
+}
+
+#let aboutnotes(body) = {
+  set text(size: .6375em, fill: rgb("#8099D0"))
+  set par(leading: .325em)
+  set block(spacing: .85em)
+  [#body]
 }
 
 #let endnote(body) = {
@@ -84,12 +98,10 @@
 
 #let caption1(body) = {
   set text(size: .65em, fill: rgb("#4068B8"))
-  set par(leading: .525em)
+  set par(leading: .55em)
   box(
     width: 100%, 
-    // fill: rgb("#f2f7fd"),
     fill: rgb("#f4f8fd"),
-    // fill: none,
     inset: .8em,
     stroke: (top: 1.5pt + rgb("#CEDEF7"), rest: none),
     body
@@ -98,11 +110,9 @@
 
 #let caption(body) = {
   set text(size: .65em, fill: rgb("#4068B8"))
-  set par(leading: .525em)
+  set par(leading: .55em)
   box(
-    // fill: rgb("#f2f7fd"),
     fill: rgb("#f4f8fd"),
-    // fill: none,
     inset: .8em,
     stroke: (top: 1.5pt + rgb("#CEDEF7"), rest: none),
     columns(2, gutter: 2.5em)[#body]
@@ -111,11 +121,9 @@
 
 #let caption3(body) = {
   set text(size: .65em, fill: rgb("#4068B8"))
-  set par(leading: .525em)
+  set par(leading: .55em)
   box(
-    // fill: rgb("#f2f7fd"),
     fill: rgb("#f4f8fd"),
-    // fill: none,
     inset: .8em,
     stroke: (top: 1.5pt + rgb("#CEDEF7"), rest: none),
     columns(3, gutter: 1.8em)[#body]
