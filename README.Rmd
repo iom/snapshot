@@ -1,0 +1,20 @@
+---
+output: github_document
+---
+
+# Country Data Snapshots
+
+This repository contains the source code behind the *Country Data Snapshots*, a curated roundup of country-level migration-related statistics pulled from an assortment of distinguished data providers. 
+
+Datasets are stored in a separate package, `gdidata`.
+
+## Installation
+
+```r
+devtools::install_github("ksreyes/gdidata")
+devtools::install_github("ksreyes/snapshot")
+```
+
+## Usage
+
+Run `render_snapshot(iso)` to generate a snapshot, where `iso` is the three-letter ISO3 code of the country of interest. 
