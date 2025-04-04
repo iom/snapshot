@@ -1,24 +1,8 @@
 
-
 # Parameters --------------------------------------------------------------
 
 basesize <- 7
 font <- "Gill Sans Nova"
-
-
-# Typst helpers -----------------------------------------------------------
-
-add_typst <- function(file, folder = "typ") {
-  readLines(paste0(folder, "/", file, ".typ")) |> 
-    paste(collapse = "\n")
-}
-
-fig <- function(N) {
-  output <- "#figure[→ Figures] "
-  if (length(N) == 1) output <- "#figure[→ Figure] "
-  for (n in N) output <- paste0(output, "#nbox[", n, "] ")
-  return(output)
-}
 
 
 # Chart helpers -----------------------------------------------------------
@@ -251,7 +235,6 @@ kosovo_disclaimer <- function(hero) {
 }
 
 
-
 # Map helpers -------------------------------------------------------------
 
 admin0 <- rnaturalearth::ne_countries(scale = 50)
@@ -398,6 +381,4 @@ map_final <- function(base, title, source, basesize, font) {
   
   return(plot)
 }
-
-
 
