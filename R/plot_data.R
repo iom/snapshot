@@ -458,7 +458,10 @@ plot_data <- function(key, iso = NULL, ...) {
             tidyr::nesting(nat, nat_name, panel),
             fill = list(n = 0)
           )
-      } else host_top_names <- NULL
+      } else {
+        host <- host |> rename(nat = from)
+        host_top_names <- NULL
+      }
         
       output$data <- bind_rows(orig, host)
       
@@ -474,16 +477,16 @@ plot_data <- function(key, iso = NULL, ...) {
           summarise(n = sum(.data$n), .by = c(.data$t, .data$panel)) |>
           mutate(nat_name = "Total")
         
-        output$print <- bind_rows(agg, output$data) |>
-          mutate(Panel = ifelse(.data$panel == "orig", panel_orig, panel_host)) |>
-          select(.data$Panel, .data$nat_name, Year = .data$t, .data$n) |>
-          arrange(.data$Panel,.data$Year) |>
-          pivot_wider(names_from = .data$nat_name, values_from = .data$n) |>
-          select(
-            "Panel", "Year", "Total",
-            all_of(c(orig_top_names, host_top_names)),
-            "Others"
-          )
+        # output$print <- bind_rows(agg, output$data) |>
+        #   mutate(Panel = ifelse(.data$panel == "orig", panel_orig, panel_host)) |>
+        #   select(.data$Panel, .data$nat_name, Year = .data$t, .data$n) |>
+        #   arrange(.data$Panel,.data$Year) |>
+        #   pivot_wider(names_from = .data$nat_name, values_from = .data$n) |>
+        #   select(
+        #     "Panel", "Year", "Total",
+        #     all_of(c(orig_top_names, host_top_names)),
+        #     "Others"
+        #   )
       }
     }
     
