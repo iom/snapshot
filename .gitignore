@@ -1,6 +1,7 @@
 GDI Country Data Snapshot
 generated
 testing*
+scripts.R
 
 # Ignore RStudio project files
 .Rproj.user/
