@@ -1,6 +1,6 @@
 Package: snapshot
 Title: Country Data Snapshot
-Version: 1.2.0
+Version: 1.4.0
 Author: Kenneth S. Reyes
 Description: Generates the GDI Country Data Snapshot.
 License: MIT + file LICENSE
