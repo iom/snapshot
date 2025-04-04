@@ -2,17 +2,18 @@
 get_pct <- function(vector, value) {
   pct <- 1 - ecdf(vector)(value)
   
-  t10 <- '#box(baseline: .5pt, width: 5.5pt, image("inst/top10.png"))'
-  t33 <- '#box(baseline: .5pt, width: 5.5pt, image("inst/top33.png"))'
-  m33 <- '#box(baseline: .5pt, width: 5.5pt, image("inst/mid33.png"))'
-  b33 <- '#box(baseline: .5pt, width: 5.5pt, image("inst/bot33.png"))'
-  b10 <- '#box(baseline: .5pt, width: 5.5pt, image("inst/bot10.png"))'
+  # t10 <- '#box(baseline: .5pt, width: 5.5pt, image("inst/top10.png"))'
+  # t10 <- "top10"
+  # t33 <- "top33"
+  # m33 <- '#box(baseline: .5pt, width: 5.5pt, image("inst/mid33.png"))'
+  # b33 <- '#box(baseline: .5pt, width: 5.5pt, image("inst/bot33.png"))'
+  # b10 <- '#box(baseline: .5pt, width: 5.5pt, image("inst/bot10.png"))'
   
-  if (pct <= .1) return(t10)
-  if (pct > .1 & pct <= 1/3) return(t33)
-  if (pct > 1/3 & pct < 2/3) return(m33)
-  if (pct >= 2/3 & pct < .9) return(b33)
-  if (pct >= .9) return(b10)
+  if (pct <= .1) return("top10")
+  if (pct > .1 & pct <= 1/3) return("top33")
+  if (pct > 1/3 & pct < 2/3) return("mid33")
+  if (pct >= 2/3 & pct < .9) return("bot33")
+  if (pct >= .9) return("bot10")
 }
 
 
@@ -38,7 +39,7 @@ caption_stocks <- function(iso) {
   if (iso == "XKX") {
       
     caption <- paste0(
-      "#caption1[",
+      "#caption(ncol: 1)[",
       migrants,
       "For statistical purposes, UN DESA includes ", name, " in Serbia.",
       "]"
@@ -46,12 +47,19 @@ caption_stocks <- function(iso) {
     
   } else if (iso == "SDN") {
     
+    # caption <- paste0(
+    #   "#caption3[",
+    #   "- ", migrants, "\n",
+    #   "- For statistical purposes, immigrant data during 1990\u20132005 ",
+    #   "covers Sudan and South Sudan.\n",
+    #   "#colbreak()\n",
+    #   caption_stocks_emig(iso), "\n",
+    #   "#colbreak()\n",
+    #   caption_stocks_immig(iso),
+    #   "]"
+    # )
     caption <- paste0(
-      "#caption3[",
-      "- ", migrants, "\n",
-      "- For statistical purposes, immigrant data during 1990\u20132005 ",
-      "covers Sudan and South Sudan.\n",
-      "#colbreak()\n",
+      "#caption[",
       caption_stocks_emig(iso), "\n",
       "#colbreak()\n",
       caption_stocks_immig(iso),
@@ -60,12 +68,19 @@ caption_stocks <- function(iso) {
     
   } else if (iso == "PSE") {
     
+    # caption <- paste0(
+    #   "#caption3[",
+    #   "- ", migrants, "\n",
+    #   "- For statistical purposes, ", name, " includes East Jerusalem. ",
+    #   "Moreover, its foreign-born migrant stock does not include refugees.\n", 
+    #   "#colbreak()\n",
+    #   caption_stocks_emig(iso), "\n",
+    #   "#colbreak()\n",
+    #   caption_stocks_immig(iso),
+    #   "]"
+    # )
     caption <- paste0(
-      "#caption3[",
-      "- ", migrants, "\n",
-      "- For statistical purposes, ", name, " includes East Jerusalem. ",
-      "Moreover, its foreign-born migrant stock does not include refugees.\n", 
-      "#colbreak()\n",
+      "#caption[",
       caption_stocks_emig(iso), "\n",
       "#colbreak()\n",
       caption_stocks_immig(iso),
@@ -74,10 +89,17 @@ caption_stocks <- function(iso) {
     
   } else {
     
+    # caption <- paste0(
+    #   "#caption3[",
+    #   "- ", migrants, "\n",
+    #   "#colbreak()\n",
+    #   caption_stocks_emig(iso), "\n",
+    #   "#colbreak()\n",
+    #   caption_stocks_immig(iso),
+    #   "]"
+    # )
     caption <- paste0(
-      "#caption3[",
-      "- ", migrants, "\n",
-      "#colbreak()\n",
+      "#caption[",
       caption_stocks_emig(iso), "\n",
       "#colbreak()\n",
       caption_stocks_immig(iso),
@@ -135,18 +157,34 @@ caption_stocks_emig <- function(iso) {
   within_iso <- filter(data_reg, geo == iso, region == "Within region")$v
   outside_iso <- filter(data_reg, geo == iso, region == "Outside region")$v
   
+  if (length(within_iso) == 0 & length(outside_iso) > 0) {
+    region_text <- str_glue(
+      "- #b[{ pl_pct(outside_iso) }] { get_pct(outside, outside_iso) } ",
+      "of emigrants emigrated outside the region."
+    )
+  }
+  if (length(within_iso) > 0 & length(outside_iso) == 0) {
+    region_text <- str_glue(
+      "- #b[{ pl_pct(within_iso) }] { get_pct(within, within_iso) } of ",
+      "emigrants remained within the {region} region."
+    )
+  } else {
+    region_text <- str_glue(
+      "- #b[{ pl_pct(within_iso) }] { get_pct(within, within_iso) } of ",
+      "emigrants remained within the {region} region while ",
+      "#b[{ pl_pct(outside_iso) }] { get_pct(outside, outside_iso) } ",
+      "emigrated outside the region."
+    )
+  }
+  
   caption <- str_glue(
     "- By UN DESA estimates, emigrants from {name} ",
     'numbered #b[{ pl(data_iso_t1) }] { get_pct(data_t1$n, data_iso_t1) } ',
     "as of {t1}, equivalent to #b[{ pl_pct(share_iso_t1) }] ",
-    "{ get_pct(share_t1$v, share_iso_t1) } of its population. This was a ",
+    "{ get_pct(share_t1$v, share_iso_t1) } of its population. This was an average ",
     "#b[{ change_iso_lab }] { get_pct(change, change_iso) } change per year ",
     "over {t0}–{t1}.\n",
-    # "#colbreak()\n",
-    "- #b[{ pl_pct(within_iso) }] { get_pct(within, within_iso) } of ",
-    "emigrants remained within the {region} region while ",
-    "#b[{ pl_pct(outside_iso) }] { get_pct(outside, outside_iso) } ",
-    "emigrated outside the region."
+    "{region_text}"
   )
   
   return(caption)
@@ -199,16 +237,41 @@ caption_stocks_immig <- function(iso) {
   within_iso <- filter(data_reg, geo == iso, region == "Within region")$v
   outside_iso <- filter(data_reg, geo == iso, region == "Outside region")$v
   
+  if (length(within_iso) == 0 & length(outside_iso) > 0) {
+    
+    region_text <- str_glue(paste(
+      "- #b[{pl_pct(outside_iso)}] {get_pct(outside, outside_iso)} of ",
+      "immigrants came from outside the region."
+    ))
+    
+  } else if (length(within_iso) > 0 & length(outside_iso) == 0) {
+    
+    region_text <- str_glue(paste(
+      "- #b[{pl_pct(within_iso)}] {get_pct(within, within_iso)} of immigrants",
+      "came from within the region."
+    ))
+    
+  } else if (length(within_iso) == 0 & length(outside_iso) == 0) {
+    
+    region_text <- "- All had unknown origins."
+    
+  } else {
+    
+    region_text <- str_glue(paste(
+      "- #b[{pl_pct(within_iso)}] {get_pct(within, within_iso)} of immigrants",
+      "came from within the region while #b[{pl_pct(outside_iso)}]",
+      "{get_pct(outside, outside_iso)} immigrated from outside the region."
+    ))
+  }
+  
   caption <- str_glue(paste(
     "- Immigrants in {name} numbered",
     "#b[{pl(data_iso_t1)}] {get_pct(data_t1$n, data_iso_t1)} as of {t1},", 
     "equivalent to #b[{pl_pct(share_iso_t1)}]",
-    "{get_pct(share_t1$v, share_iso_t1)} of its population. This was a", 
-    "#b[{change_iso_lab}] {get_pct(change, change_iso)} change per year over",
-    "{t0}–{t1}.\n",
-    "- #b[{pl_pct(within_iso)}] {get_pct(within, within_iso)} of immigrants",
-    "came from within the region while #b[{pl_pct(outside_iso)}]",
-    "{get_pct(outside, outside_iso)} immigrated from outside the region."
+    "{get_pct(share_t1$v, share_iso_t1)} of its population. This was an", 
+    "average #b[{change_iso_lab}] {get_pct(change, change_iso)} change per",
+    "year over {t0}–{t1}.\n",
+    "{region_text}"
   ))
   
   return(caption)
@@ -442,7 +505,10 @@ caption_refug_orig <- function(iso) {
     data_iso_t1 <- filter(data_iso, t == t1) |> pull(n)
     
     # Shares of population
-    pop_t1 <- filter(gdidata::wdi, var == "pop" & t == t1) |> rename(pop = v)
+    
+    pop_t1 <- filter(gdidata::undesa_wpp, t == t1) |> 
+      summarise(n = 1000 * sum(n), .by = geo) |> 
+      rename(pop = n)
     share_t1 <- left_join(data_t1, pop_t1, by = c("from" = "geo")) |> 
       mutate(v = 100 * n / pop) |> 
       drop_na()
@@ -477,24 +543,28 @@ caption_refug_orig <- function(iso) {
     hosts <- filter(host_iso, .data$nat != "Others")
     others <- filter(host_iso, .data$nat == "Others")
     
-    if (nrow(hosts == 1)) {
+    if (nrow(hosts) == 0) {
+      hosts_text <- ""
+    }
+    
+    if (nrow(hosts) == 1) {
       hosts_text <- str_glue(
-        "All were hosted in { namer(hosts$nat[1], bold = TRUE) }."
+        "- All were hosted in { namer(hosts$nat[1], bold = TRUE) }."
       )
     }
     
-    if (nrow(hosts == 2)) {
+    if (nrow(hosts) == 2) {
       hosts_text <- str_glue(
-        "{ pl_pct(hosts$v[1]) } were hosted in ",
+        "- { pl_pct(hosts$v[1]) } were hosted in ",
         "{ namer(hosts$nat[1], bold = TRUE) } while ",
         "{ pl_pct(hosts$v[2]) } were hosted in ",
         "{ namer(hosts$nat[2], bold = TRUE) }."
       )
     }
     
-    if (nrow(hosts == 3)) {
+    if (nrow(hosts) == 3) {
       hosts_text <- str_glue(
-        "{ pl_pct(hosts$v[1]) } were hosted in ",
+        "- { pl_pct(hosts$v[1]) } were hosted in ",
         "{ namer(hosts$nat[1], bold = TRUE) }, ",
         "{ pl_pct(hosts$v[2]) } in ",
         "{ namer(hosts$nat[2], bold = TRUE) }, and ",
@@ -510,11 +580,11 @@ caption_refug_orig <- function(iso) {
     }
     
     caption <- str_glue(
-      " - By UNHCR estimates, refugees from {name} numbered ",
+      "- By UNHCR estimates, refugees from {name} numbered ",
       "#b[{pl(data_iso_t1)}] {get_pct(data_t1$n, data_iso_t1)} in {t1}, ",
       "equivalent to #b[{pl_pct(share_iso_t1)}]  ",
       "{get_pct(share_t1$v, share_iso_t1)} of its population. {change_text}\n",
-      " - {hosts_text} {others_text}"
+      "{hosts_text} {others_text}"
     )
   }
   
@@ -560,7 +630,9 @@ caption_refug_host <- function(iso) {
     data_iso_t1 <- filter(data_iso, t == t1) |> pull(n)
     
     # Shares of population
-    pop_t1 <- filter(gdidata::wdi, var == "pop" & t == t1) |> rename(pop = v)
+    pop_t1 <- filter(gdidata::undesa_wpp, t == t1) |> 
+      summarise(n = 1000 * sum(n), .by = geo) |> 
+      rename(pop = n)
     share_t1 <- left_join(data_t1, pop_t1, by = "geo") |> 
       mutate(v = 100 * n / pop) |> 
       drop_na()
@@ -596,23 +668,29 @@ caption_refug_host <- function(iso) {
     unknowns <- filter(orig_iso, .data$nat == "Unknowns")
     others <- filter(orig_iso, .data$nat == "Others")
     
-    if (nrow(origs == 1)) {
+    if (nrow(origs) == 0) {
       origs_text <- str_glue(
-        "All came from { namer(origs$nat[1], bold = TRUE) }."
+        orig_text <- ""
       )
     }
     
-    if (nrow(origs == 2)) {
+    if (nrow(origs) == 1) {
       origs_text <- str_glue(
-        "{ pl_pct(origs$v[1]) } came from ",
+        "- All came from { namer(origs$nat[1], bold = TRUE) }."
+      )
+    }
+    
+    if (nrow(origs) == 2) {
+      origs_text <- str_glue(
+        "- { pl_pct(origs$v[1]) } came from ",
         "{ namer(origs$nat[1], bold = TRUE) } while ",
         "{ pl_pct(origs$v[2]) } came from { namer(origs$nat[2], bold = TRUE) }."
       )
     }
     
-    if (nrow(origs == 3)) {
+    if (nrow(origs) == 3) {
       origs_text <- str_glue(
-        "{ pl_pct(origs$v[1]) } came from ",
+        "- { pl_pct(origs$v[1]) } came from ",
         "{ namer(origs$nat[1], bold = TRUE) }, ",
         "{ pl_pct(origs$v[2]) } from ",
         "{ namer(origs$nat[2], bold = TRUE) }, and ",
@@ -639,7 +717,7 @@ caption_refug_host <- function(iso) {
       "{get_pct(data_t1$n, data_iso_t1)} in {t1},  equivalent to ",
       "#b[{pl_pct(share_iso_t1)}] {get_pct(share_t1$v, share_iso_t1)} of its ",
       "population. {change_text}\n",
-      " - {origs_text} {unknown_text} {others_text}"
+      "{origs_text} {unknown_text} {others_text}"
     )
   }
   
@@ -661,7 +739,7 @@ caption_idp <- function(iso) {
   if (nrow(data_iso) == 0) {
     
     caption <- str_glue(
-      "#caption1[",
+      "#caption(ncol: 1)[",
       "Over {t0}\u2013{t1}, IDMC reports no internal displacements in {name}.",
       "]"
     )
@@ -692,7 +770,7 @@ caption_idp <- function(iso) {
   
   } else if (agg_iso_disaster == 0 & agg_iso_conflict > 0) {
     
-    cause_text <- "All were caused by disasters."
+    cause_text <- "All were caused by conflicts."
     
   } else {
     
@@ -709,6 +787,8 @@ caption_idp <- function(iso) {
     "displacements in {name} over 2014\u20132023, equivalent to an annual ",
     "average of { pl(agg_iso / 10) }. {cause_text}"
   )
+  
+  # Disasters
   
   if (agg_iso_disaster > 0) {
     
@@ -772,15 +852,17 @@ caption_idp <- function(iso) {
         "{ get_pct(disaster_top3$n, disaster_iso_top3$n[3]) } displacements."
       )
     }
+    
+    caption <- str_glue(paste(
+      "#caption[",
+      " - {totals_text}\n",
+      "#colbreak()\n",
+      " - Among disasters, {natdis}",
+      "]"
+    ))
   }
-   
-  caption <- str_glue(paste(
-    "#caption[",
-    " - {totals_text}\n",
-    "#colbreak()\n",
-    " - Among disasters, {natdis}",
-    "]"
-  ))
+  
+  caption <- str_glue("#caption(ncol: 1)[{totals_text}]")
   
   return(caption)
 }
@@ -956,7 +1038,7 @@ caption_remin <- function(iso) {
       "to #b[{pl_usd(data_iso_t1_latest)}]",
       "{get_pct(data_t1_latest, data_iso_t1_latest)} in {t1_latest}. {period},",
       "these were #b[{pl_pct(sh_iso_t0_t1)}] {get_pct(sh_t0_t1, sh_iso_t0_t1)}",
-      "of GDP."
+      "of its GDP."
     ))
   }
   
@@ -1018,7 +1100,7 @@ caption_remout <- function(iso) {
       "#b[{pl_usd(data_iso_t1_latest)}]",
       "{get_pct(data_t1_latest, data_iso_t1_latest)} in {t1_latest}. {period},",
       "these were #b[{pl_pct(sh_iso_t0_t1)}] {get_pct(sh_t0_t1, sh_iso_t0_t1)}",
-      "of GDP."
+      "of its GDP."
     ))
   }
   
@@ -1079,7 +1161,7 @@ caption_fdiin <- function(iso) {
     if (!is.na(sh_iso_t0_t1)) {
       share_text <- str_glue(paste(
         "{period}, these were #b[{pl_pct(sh_iso_t0_t1)}]",
-        "{get_pct(sh_t0_t1, sh_iso_t0_t1)} of GDP."
+        "{get_pct(sh_t0_t1, sh_iso_t0_t1)} of its GDP."
       ))
     }
     if (t0 == t1) period <- str_glue("In {t1}")
@@ -1152,7 +1234,7 @@ caption_fdiout <- function(iso) {
     if (!is.na(sh_iso_t0_t1)) {
       share_text <- str_glue(paste(
         "{period}, these were #b[{pl_pct(sh_iso_t0_t1)}]",
-        "{get_pct(sh_t0_t1, sh_iso_t0_t1)} of GDP."
+        "{get_pct(sh_t0_t1, sh_iso_t0_t1)} of its GDP."
       ))
     }
     
@@ -1272,7 +1354,7 @@ caption_depend <- function(iso) {
     caption <- str_glue(paste(
       "The World Bank reports #b[{pl(data_iso_t1)}]",
       "{get_pct(data_t1, data_iso_t1)} dependents (younger than 15, older than",
-      "64) per 100 working-age persons in {t1}. The global median was",
+      "64 years) per 100 working-age persons in {t1}. The global median was",
       "{pl(med_t1)}."
     ))
   }
