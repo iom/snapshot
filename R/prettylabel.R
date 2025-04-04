@@ -22,7 +22,7 @@ prettylabel <- function(N,
   
   if (signif <= 0) {
     cli::cli_abort("`signif` must be greater than zero.")
-  } 
+  }
   
   fmt <- function(num) {
     
@@ -70,47 +70,54 @@ prettylabel <- function(N,
   labels <- c()
 
   for (n in N) {
-
-    label <- list()
-    label$prefix <- if(is.null(currency)) NULL else currency
-    label$number <- NULL
-    label$suffix <- NULL
-
-    if (pct) {
-
-      # if (n < 1) n <- 100 * n
-      label$number <- fmt(n)
-      label$suffix <- suffixes$pc
-
-    } else if (n <= 999.5) {
-
-      label$number <- fmt(n)
-
-    } else if (n >= 999.5 & n < 999500) {
-      
-      if (spell) {
-        label$number <- fmt(n)
-      } else {
-        n <- n / 1000
-        label$number <- fmt(n)
-        label$suffix <- suffixes$th
-      }
-
-    } else if (n >= 999500 & n < 999.5 * 10^6) {
-      
-      n <- n / 10^6
-      label$number <- fmt(n)
-      label$suffix <- suffixes$mn
-      
-    } else if (n >= 999.5 * 10^6 & n < 999.5 * 10^9) {
-      
-      n <- n / 10^9
-      label$number <- fmt(n)
-      label$suffix <- suffixes$bn
-      
-    }
     
-    labels <- c(labels, paste0(label$prefix, label$number, label$suffix))
+    if (is.na(n)) {
+      
+      labels <- c(labels, NA)
+      
+    } else {
+      
+      label <- list()
+      label$prefix <- if(is.null(currency)) NULL else currency
+      label$number <- NULL
+      label$suffix <- NULL
+  
+      if (pct) {
+  
+        # if (n < 1) n <- 100 * n
+        label$number <- fmt(n)
+        label$suffix <- suffixes$pc
+  
+      } else if (n <= 999.5) {
+  
+        label$number <- fmt(n)
+  
+      } else if (n >= 999.5 & n < 999500) {
+        
+        if (spell) {
+          label$number <- fmt(n)
+        } else {
+          n <- n / 1000
+          label$number <- fmt(n)
+          label$suffix <- suffixes$th
+        }
+  
+      } else if (n >= 999500 & n < 999.5 * 10^6) {
+        
+        n <- n / 10^6
+        label$number <- fmt(n)
+        label$suffix <- suffixes$mn
+        
+      } else if (n >= 999.5 * 10^6 & n < 999.5 * 10^9) {
+        
+        n <- n / 10^9
+        label$number <- fmt(n)
+        label$suffix <- suffixes$bn
+        
+      }
+      
+      labels <- c(labels, paste0(label$prefix, label$number, label$suffix))
+    }
   }
   
   #   
