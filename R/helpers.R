@@ -23,6 +23,37 @@ fig <- function(N) {
 
 # Chart helpers -----------------------------------------------------------
 
+plot_map <- function(data, data_sub, borders = TRUE, fill = TRUE) {
+  
+  if (borders) stroke <- pal("grays", 2)
+  
+  
+  ggplot() + 
+    geom_sf(data = data, fill = pal("grays", 5), color = NA) +
+    geom_sf(
+      data = border, 
+      fill = NA, color = pal("grays", 2), linewidth = k(.05)
+    ) +
+    geom_sf(
+      data = data_sub, 
+      fill = NA, color = pal("grays", 3), linewidth = k(.025)
+    ) +
+    apply_theme("map", basesize = basesize, font = font) + 
+    theme(
+      legend.key.width = unit(1.25 * size$text, "points"),
+      legend.title = element_text(
+        size = size$text, 
+        hjust = .5,
+        margin = margin(l = k(3.5))
+      ),
+      legend.title.position = "right",
+      legend.box.spacing = unit(k(.25), "lines"),
+      plot.margin = margin(0, 0, k(2), 0)
+    )
+  
+}
+
+
 idmc_iom <- c(
   "AFG",
   "BEN",
@@ -70,7 +101,7 @@ namer <- function(iso, bold = FALSE) {
       if (name_iso$with_the == 1) {
         name <- paste0("the ", "#b[", name_iso$name_text, "]")
       }
-      else name <- paste("#b[", name_iso$name_text, "]")
+      else name <- paste0("#b[", name_iso$name_text, "]")
       
     } else {
       
@@ -218,5 +249,155 @@ kosovo_disclaimer <- function(hero) {
     return(return_text)
   }
 }
+
+
+
+# Map helpers -------------------------------------------------------------
+
+admin0 <- rnaturalearth::ne_countries(scale = 50)
+
+admin1 <- sf::st_read(
+  "data-raw/maps/ne_10m_admin_1_states_provinces.shp",
+  quiet = TRUE
+) |> 
+  mutate(adm0_a3 = case_when(
+    woe_name %in% c("Bonaire", "Saba", "St. Eustatius") ~ "BES",
+    geonunit == "French Guiana" ~ "GUF",
+    geonunit == "Guadeloupe" ~ "GLP",
+    geonunit == "Martinique" ~ "MTQ",
+    adm0_a3 == "KOS" ~ "XKX", 
+    adm0_a3 == "SDS" ~ "SSD", 
+    adm0_a3 == "PSX" ~ "PSE", 
+    adm0_a3 == "SAH" ~ "ESH", 
+    .default = adm0_a3
+  )) |> 
+  
+  # Remove French overseas departments Réunion and Mayotte
+  filter(!(adm0_a3 == "FRA" & type_en == "Overseas department")) |> 
+  
+  sf::st_make_valid()
+
+nmig_rast <- system.file(
+  "rasters", "nmig_2016_2020_avg.tif", package = "gdidata"
+) |> 
+  raster::raster()
+names(nmig_rast) <- "v"
+
+map_data <- function(hero) {
+  
+  border_adm1 <- filter(admin1, adm0_a3 == hero)
+  
+  if (hero == "RUS") {
+    border_adm1 <- border_adm1 |> 
+      sf::st_crop(c(xmin = 19, ymin = 0, xmax = 179.9999, ymax = 82))
+  }
+  
+  border <- sf::st_union(border_adm1)
+  bbox <- sf::st_bbox(border)
+  
+  if (hero == "CHL") {
+    lims <- list(
+      xlim = c("xmin" = -76, "xmax" = -55.91850),
+      ylim = c("ymin" = -66.42081, "ymax" = -17.50659)
+    )
+  } else {
+    lims <- list(
+      xlim = c(bbox$xmin, bbox$xmax),
+      ylim = c(bbox$ymin, bbox$ymax)
+    )
+  }
+  
+  output <- list()
+  
+  output$border_adm1 <- border_adm1
+  output$border <- border
+  output$lims <- lims
+  output$aspect <- (lims$ylim[2] - lims$ylim[1]) / (lims$xlim[2] - lims$xlim[1])
+  
+  return(output)
+}
+
+map_scale <- function(values) {
+  
+  values <- sort(values)
+  
+  labels <- prettylabel
+  
+  if (length(unique(values)) <= 2) breaks <- values
+  
+  if (length(unique(values)) >= 3) {
+    
+    breaks <- c(
+      min(values), 
+      round((max(values) + min(values)) / 4), 
+      max(values)
+    )
+    
+    labels <- c(
+      min(values), 
+      round((max(values) + min(values)) / 4), 
+      max(values)
+    ) |> prettylabel()
+  }
+  
+  output <- list()
+  output$labels <- labels
+  output$breaks <- breaks
+  
+  return(output)
+}
+
+map_base <- function(hero, k) {
+  
+  map <- map_data(hero)
+  
+  plot <- ggplot() + 
+    geom_sf(
+      data = map$border, 
+      fill = pal("grays", 5), color = pal("grays", 4), linewidth = .10
+    ) +
+    geom_sf(
+      data = map$border_adm1, 
+      fill = NA, color = pal("grays", 4), linewidth = .05
+    ) + 
+    coord_sf(
+      xlim = map$lims$xlim, 
+      ylim = map$lims$ylim, 
+      expand = FALSE,
+      clip = "off"
+    ) +
+    apply_theme("map", basesize = basesize, font = font) +
+    theme(
+      legend.spacing.x = unit(.25 * basesize, "points"),
+      legend.text = element_text(margin = margin(t = 0)),
+      legend.title = element_text(size = basesize),
+      plot.margin = margin(0, 0, 0, 0)
+    )
+  
+  return(plot)
+}
+
+map_final <- function(base, title, source, basesize, font) {
+  
+  k <- function(factor = 1) factor * basesize / .pt
+  
+  plot_title <- ggplot() + ggtitle(title) +
+    apply_theme("map", basesize = basesize, font = font) +
+    theme(plot.margin = margin(0, 0, 0, 0))
+  
+  plot_caption <- ggplot() + labs(caption = source) +
+    apply_theme("map", basesize = basesize, font = font) +
+    theme(plot.margin = margin(0, 0, 0, 0))
+  
+  plot <- plot_grid(
+    plot_title, base, plot_caption,
+    nrow = 3,
+    rel_heights = c(.15, 1, .05)
+  ) +
+    theme(plot.margin = margin(k(2), k(3), k(2), k(3)))
+  
+  return(plot)
+}
+
 
 
