@@ -1,31 +1,50 @@
 
-render_snapshot <- function(iso) {
+render_snapshot <- function(iso, 
+                            target_dir = NULL,
+                            simplify_name = FALSE) {
+  
   devtools::load_all(".")
-  cat(build(iso, version), file = "_temp.qmd")
-  quarto::quarto_render("_temp.qmd")
-  unlink("_temp*")
-}
-
-build <- function(iso, version) {
   
   name <- countryname(iso, to = "name_text")
-  filename <- gsub(" ", "-", tolower(name))
-  filename <- gsub("ô", "o", filename)
-  filename <- gsub("ü", "u", filename)
-  filename <- gsub("é", "e", filename)
-  filename <- gsub("ã", "a", filename)
-  filename <- gsub("í", "i", filename)
-  filename <- gsub("ç", "c", filename)
-  filename <- gsub("’", "-", filename)
-  filename <- gsub("\\(", "", filename)
-  filename <- gsub("\\)", "", filename)
-  filename <- gsub(",", "", filename)
+  if (simplify_name) {
+    filename <- gsub(" ", "-", tolower(name))
+    filename <- gsub("ô", "o", filename)
+    filename <- gsub("ü", "u", filename)
+    filename <- gsub("é", "e", filename)
+    filename <- gsub("ã", "a", filename)
+    filename <- gsub("í", "i", filename)
+    filename <- gsub("ç", "c", filename)
+    filename <- gsub("’", "-", filename)
+    filename <- gsub("\\(", "", filename)
+    filename <- gsub("\\)", "", filename)
+    filename <- gsub(",", "", filename)
+  } else {
+    filename <- name
+  }
+  
+  cat(build(iso, name = name, filename = filename), file = "_temp.qmd")
+  quarto::quarto_render("_temp.qmd")
+  unlink("_temp*")
+  
+  if (!is.null(target_dir)) {
+    source <- paste0(filename, ".pdf")
+    target <- file.path(target_dir, paste0(filename, ".pdf"))
+    file.rename(source, target)
+  }
+  
+  beepr::beep(10)
+}
+
+build <- function(iso, name, filename) {
+  
+  version <- packageVersion("snapshot")
   
   yaml <- stringr::str_glue(
     '---
 title: "{name}"
 output-file: "{filename}"
 iso: {iso}
+version: {version}
 execute:
   echo: false
 warning: false
