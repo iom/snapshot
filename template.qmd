@@ -18,50 +18,6 @@ i <- 1
 j <- 0
 ```
 
-<!-- ```{=typst} -->
-<!-- `r add_typst("typst")` -->
-<!-- ``` -->
-
-<!-- ```{=typst} -->
-<!-- #grid( -->
-<!--   columns: (40%, 1%, 59%), -->
-<!--   box(fill: rgb("#f4f8fd"), inset: .8em)[ -->
-<!--     #h0[ABOUT] -->
-<!--     #about[ -->
-<!--       #abouthead[This #b[Country Data Snapshot] is a brief overview of migration-related statistics from global datasets compiled by UN agencies and other international organisations.] -->
-
-<!--       #aboutnotes[Maps are for illustration purposes only. The boundaries and names shown and the designations used on maps do not imply official endorsement or acceptance by IOM. `r kosovo_disclaimer(code)` -->
-
-<!--         Data are subject to the inherent limitations of global datasets and should be considered as statistical baselines, especially in the absence of more precise local data. Figures may differ from those published by national statistics offices or other sources.]] -->
-<!--   ], -->
-<!--   none, -->
-<!--   box(inset: .8em)[ -->
-<!--     #h0[CONTENTS] -->
-<!--     #contents[ -->
-<!--       - How many emigrants and immigrants are there? What are their destinations and origins? What is their age and sex structure? `r fig(1:3)` -->
-
-<!--       - What are trends and patterns of net migration? `r fig(4:5)` -->
-
-<!--       - When and where have displacements occurred? What are the causes? `r fig(6:8)` -->
-
-<!--       - When and where have migrants died or gone missing? `r fig(9:10)` -->
-
-<!--       - How many refugees are there? `r fig(11)` -->
-
-<!--       - How large are remittances and foreign direct investment? `r fig(12:13)` -->
-
-<!--       - What are the demographic features of the overall population? `r fig(14:16)` -->
-
-<!--       - How have economic indicators developed? `r fig(17:19)` -->
-<!--     ] -->
-<!--   ], -->
-<!-- ) -->
-<!-- ``` -->
-
-<!-- ```{=typst} -->
-<!-- #h1[I. MIGRATION] -->
-<!-- ``` -->
-
 ```{=typst}
 #header(name: "I. Migration")
 ```
@@ -231,39 +187,6 @@ i <- i + 2
   note: "Data in this section refer to the general population of `r gdidata::countryname(rmarkdown::metadata$iso, to = 'name_text')` (i.e., migrant and non-migrant population)."
 )
 ```
-
-<!-- ```{=typst} -->
-<!-- #grid( -->
-<!--   columns: (auto, 1fr), -->
-<!--   rows: (.4cm, .025cm), -->
-<!--   rect( -->
-<!--     width: auto, -->
-<!--     height: 100%, -->
-<!--     inset: 2pt, -->
-<!--     outset: 1pt, -->
-<!--     fill: rgb("#0033A0") -->
-<!--   )[ -->
-<!--     #text( -->
-<!--       size: .7em, -->
-<!--       weight: "bold", -->
-<!--       fill: white, -->
-<!--       baseline: 1pt, -->
-<!--       "II. DEMOGRAPHICS AND ECONOMY" -->
-<!--     ) -->
-<!--   ], -->
-<!--   rect(stroke: none)[ -->
-<!--     #text( -->
-<!--       fill: rgb("#4068B8"), -->
-<!--       size: .6em, -->
-<!--       style: "italic", -->
-<!--       baseline: -3pt, -->
-<!--       "Data in this section refer to the general population of `r gdidata::countryname(rmarkdown::metadata$iso, to = 'name_text')` (i.e., migrant and non-migrant population)." -->
-<!--     ) -->
-<!--   ], -->
-<!--   rect(width: 12.5em, height: 100%, outset: 1pt, fill: rgb("#0033A0")), -->
-<!--   rect(width: 100%, height: 100%, outset: 1pt, fill: rgb("#0033A0")) -->
-<!-- ) -->
-<!-- ``` -->
 
 ```{=typst}
 #caption(ncol: 3)[
