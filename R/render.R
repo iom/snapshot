@@ -5,7 +5,13 @@ render_snapshot <- function(iso,
   
   devtools::load_all(".")
   
-  name <- countryname(iso, to = "name_text")
+  # Check if ISO is valid
+  valid_iso <- filter(gdidata::countrynames, snapshot == 1)
+  if (!(iso %in% valid_iso)) {
+    cli::cli_abort("{iso} has no associated Snapshot.")
+  }
+  
+  name <- gdidata::countryname(iso, to = "name_text")
   if (simplify_name) {
     filename <- gsub(" ", "-", tolower(name))
     filename <- gsub("ô", "o", filename)
@@ -59,4 +65,3 @@ format:
   
   return(paste0(yaml, "\n", text))
 }
-
