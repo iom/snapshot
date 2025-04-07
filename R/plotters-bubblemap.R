@@ -234,7 +234,6 @@ plot_mmpmap <- function(hero,
       plot <- plot + 
         guides(fill = guide_legend(
           direction = "vertical", 
-          nrow = 3,
           override.aes = list(size = 2, shape = 22, color = NA), 
           order = 2
         )) +

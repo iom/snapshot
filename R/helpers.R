@@ -306,7 +306,9 @@ map_scale <- function(values) {
   
   labels <- prettylabel
   
-  if (length(unique(values)) <= 2) breaks <- values
+  if (length(unique(values)) <= 2) {
+    breaks <- unique(values)
+  }
   
   if (length(unique(values)) >= 3) {
     
