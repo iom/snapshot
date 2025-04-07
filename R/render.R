@@ -6,7 +6,7 @@ render_snapshot <- function(iso,
   devtools::load_all(".")
   
   # Check if ISO is valid
-  valid_iso <- filter(gdidata::countrynames, snapshot == 1)
+  valid_iso <- filter(gdidata::countrynames, snapshot == 1)$iso3
   if (!(iso %in% valid_iso)) {
     cli::cli_abort("{iso} has no associated Snapshot.")
   }
