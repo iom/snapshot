@@ -300,3 +300,97 @@ plot_nats <- function(hero,
   return(plot)
 }
 
+
+# Immigrant origins -------------------------------------------------------
+
+plot_immorig <- function(hero,
+                         basesize,
+                         font,
+                         title = paste0(
+                           "Origins of migrants, ",
+                           snap_data("immorig", hero, use_2020 = use_2020)$range
+                         ),
+                         use_2020 = TRUE) {
+  
+  k <- function(factor = 1) factor * basesize / .pt
+  name <- namer(hero)
+  source <- "Source: UN DESA."
+  if (use_2020) source <- "Source: UN DESA (2020 release)."
+  
+  data <- snap_data("immorig", hero, use_2020 = use_2020)$data
+  
+  if (!is.null(data)) {
+    
+    df <- data |> 
+      mutate(
+        label = break_lines(label),
+        group = case_when(
+          from == "Others" ~ "B",
+          from == "OOO" ~ "C",
+          .default = "A"
+        ),
+        v = n / sum(n),
+        annot = prettylabel(100 * v)
+      )
+    
+    fills <- c(
+      "A" = pal("blues", 2),
+      "B" = pal("unblues", 2),
+      "C" = pal("grays", 4)
+    )
+    
+    plot <- ggplot(df, aes(x = from, y = v, fill = group)) +
+      labs(title = title, caption = source) +
+      geom_bar(stat = "identity", width = .7, show.legend = FALSE) +
+      
+      scale_x_discrete(
+        labels = df$label,
+        expand = expansion(mult = .05),
+      ) +
+      scale_y_continuous(
+        name = "Per cent",
+        label = function(x) 100 * x,
+        expand = expansion(mult = c(.02, .1)),
+      ) +
+      scale_fill_manual(values = fills) + 
+      
+      apply_theme("bar-vertical", basesize = basesize, font = font) +
+      theme(
+        axis.title.y = element_text(
+          size = basesize,
+          margin = margin(r = k(2))
+        ),
+        axis.text.x = element_text(size = basesize - 1, lineheight = k(.35)),
+      )
+      
+    plot <- plot +
+      geom_text(
+        aes(label = annot),
+        color = pal("blues"),
+        size = k(.9),
+        vjust = 0,
+        nudge_y = layer_scales(plot)$y$range$range[2] / 40,
+      )
+      
+  } else {
+    
+    plot_base <- ggplot() +
+      ggtitle(title) +
+      apply_theme("bar-vertical", basesize = basesize, font = font) +
+      theme(
+        panel.background = element_rect(color = NA, fill = pal("unblues", 6)),
+      )
+    
+    plot <- ggdraw(plot_base) +
+      draw_label(
+        "No data",
+        y = .5,
+        fontfamily = font,
+        color = pal("blues", 3),
+        size = k(3)
+      )
+  }
+  
+  return(plot)
+}
+
