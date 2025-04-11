@@ -1006,3 +1006,110 @@ plot_unem <- function(hero,
 }
 
 
+
+
+
+
+# Immigrant dependency ratio ----------------------------------------------
+
+plot_immdep <- function(hero,
+                        basesize,
+                        font,
+                        title = paste0(
+                          "Age dependency ratio, ",
+                          snap_data("immdep", hero)$range |>
+                            paste(collapse = "\u2013")
+                        )) {
+  
+  k <- function(factor = 1) factor * basesize / .pt
+  source <- "Source: UN DESA; World Bank; IOM Global Data Institute."
+  
+  data <- snap_data("immdep", hero)$data
+  
+  timespan <- unique(migdemog$t)
+  
+  if (nrow(data) > 0) {
+    
+    t0 <- min(timespan)
+    t1 <- max(timespan)
+    
+    endpts <- filter(data, t %in% c(max(t), max(t) - 1), .by = var) |> 
+      drop_na() |> 
+      mutate(pt = 1:n(), .by = var) |> 
+      filter(max(pt) == 1, .by = var)
+    
+    df <- complete(data, t = timespan, var = c("gen", "immig"))
+    
+    lab <- data |> 
+      filter(t == max(t)) |> 
+      mutate(lab = round(v, digits = 0))
+    
+    plot <- ggplot(df, aes(x = t, y = v, color = var, group = var)) +
+      geom_line(linewidth = k(.35), na.rm = TRUE) + 
+      geom_point(
+        aes(x = t, y = v, color = var), endpts,
+        size = .5, shape = 15, show.legend = FALSE
+      ) + 
+      
+      # Annotations
+      geom_segment(
+        aes(x = t, y = v), lab, 
+        xend = t1 + 1,
+        color = "black", 
+        linetype = "11", 
+        linewidth = k(.1)
+      ) +
+      geom_label(
+        aes(y = v, fill = var, label = lab), lab, 
+        x = t1 + 1,
+        color = "white", 
+        size = k(.9), 
+        fontface = "bold", 
+        family = font,
+        hjust = 0, 
+        vjust = .5, 
+        label.r = unit(.05, "lines"), 
+        label.size = .1,
+        show.legend = FALSE,
+      ) +
+      labs(title = title, caption = source) +
+      
+      scale_x_continuous(
+        expand = expansion(mult = c(.03, .05)),
+        guide = guide_axis(minor.ticks = TRUE)
+      ) +
+      scale_y_continuous(name = "Dependents per\n100 working age persons") +
+      scale_fill_manual(values = c(
+        "gen" = pal("blues", 2), 
+        "immig" = pal("greens")
+      )) +
+      scale_color_manual(
+        label = c("General population", "Immigrant population"),
+        values = c(
+          "gen" = pal("blues", 2), 
+          "immig" = pal("greens")
+        )
+      ) +
+      coord_cartesian(clip = "off") +
+      
+      # Aesthetics
+      apply_theme(type = "bar-vertical", basesize = basesize, font = font) +
+      theme(
+        axis.title.y = element_text(
+          size = basesize,
+          margin = margin(r = k(2))
+        ),
+        axis.ticks.x = element_line(color = pal("blues"), linewidth = k(.05)),
+        plot.margin = margin(k(4), k(4), k(.25), k(4))
+      )
+    
+  } else {
+    plot <- plot_empty(title, source, timespan, basesize, font)
+  }
+  
+  return(plot)
+}
+
+
+
+
