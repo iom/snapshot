@@ -219,8 +219,19 @@
 
   // About and contents boxes
 
+  let figure = text(style: "italic", fill: color-subtle)[→ Figure]
+  let figures = text(style: "italic", fill: color-subtle)[→ Figures]
+  let nbox(body) = {
+    set text(size: .65em, weight: "bold", fill: white)
+    box(
+      fill: color-number, 
+      inset: (x: 1.5pt, y: .7pt),
+      outset: (y: 1.5pt)
+    )[#body]
+  }
+
   grid(
-    columns: (35%, 1%, 1fr),
+    columns: (30%, 1%, 1fr, 1fr),
 
     block(fill: color-light, inset: 1.1em)[
 
@@ -257,47 +268,48 @@
       
       #pad(bottom: 3pt)[
         #block[
-          #set text(size: fontsize-med, fill: color-main)
+          #set text(size: fontsize, fill: color-main)
           #set par(leading: .5em)
           #set block(spacing: 1em)
 
-          #let figure = text(style: "italic", fill: color-subtle)[→ Figure]
-          #let nbox(body) = {
-            set text(size: .65em, weight: "bold", fill: white)
-            box(
-              fill: color-number, 
-              inset: (x: 1.5pt, y: .9pt),
-              outset: (y: 1.5pt)
-            )[#body]
-          }
-
           #b[Demography, employment, and unemployment of immigrants]
 
-          - Where have immigrants come from, and what is their demographic structure? #figure #nbox[1] – #nbox[3]
+          - Where have immigrants come from, and what is their demographic structure? #figures #nbox[1] #nbox[2] #nbox[3]
 
-          - How many foreign- and native-borns are employed, and what are their skill level and sex distributions? #figure #nbox[4] #nbox[5]
+          - How many foreign- and native-borns are employed, and what are their skill level and sex distributions? \ #figures #nbox[4] #nbox[5]
 
-          - How do unemployment rates compare between foreign- and native-borns, and how do they vary by skill level and sex? #figure #nbox[6] #nbox[7]
+          - How do unemployment rates compare between foreign- and native-borns, and how do they vary by skill level and sex? #figures #nbox[6] #nbox[7]
 
-          - What are average working hours and wages of employed foreign- and native-borns? #figure #nbox[8] #nbox[9]
+          - What are average working hours and wages of employed foreign- and native-borns? #figures #nbox[8] #nbox[9]
 
-          - Which economic sectors do immigrants work in? #figure #nbox[10]
+          - Which economic sectors do immigrants work in? \ #figure #nbox[10]
+        ]
+      ]
+    ],
+
+    block(inset: .8em)[
+
+      #pad(bottom: 3pt)[
+        #block[
+          #set text(size: fontsize, fill: color-main)
+          #set par(leading: .5em)
+          #set block(spacing: 1em)
 
           #b[Sectoral analysis of national economy]
 
-          -	How do different economic sectors compare in terms of value added and export volume? #figure #nbox[11] #nbox[12]
+          -	How do different economic sectors compare in terms of value added and export volume? #figures #nbox[11] #nbox[12]
 
           -	How are employment and skill levels distributed across economic sectors? #figure #nbox[13]
 
           -	Which economic sectors did unemployed persons previous work in? #figure #nbox[14]
 
-          -	What is the educational structure and language distribution? #figure #nbox[15] #nbox[16]
+          -	What is the educational structure and language distribution? #figures #nbox[15] #nbox[16]
 
-          #b[Comparison to origin countries’ economies by sector and skill level]
+          #b[Comparison to origin countries' economies by sector and skill level]
 
-          -	How does the national skill level distribution compare to that in migrant origin countries and in countries worldwide? #figure #nbox[17] – #nbox[19]
+          -	How does the national skill level distribution compare to that in migrant origin countries and in countries worldwide? #figures #nbox[17] #nbox[18] #nbox[19]
 
-          -	How does the sectoral employment and unemployment distribution compare with that in migrant origin countries and in countries worldwide? #figure #nbox[20] – #nbox[25]
+          -	How does the sectoral employment and unemployment distribution compare with that in migrant origin countries and in countries worldwide? \ #figures #nbox[20] #nbox[21] #nbox[22] #nbox[23] #nbox[24] #nbox[25]
         ]
       ]
     ]
