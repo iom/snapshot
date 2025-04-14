@@ -2,6 +2,7 @@ Package: snapshot
 Title: Country Data Snapshot
 Version: 1.4.1
 Author: Kenneth S. Reyes
+Maintainer: Kenneth S. Reyes
 Description: Generates the GDI Country Data Snapshot.
 License: MIT + file LICENSE
 Encoding: UTF-8
@@ -23,3 +24,6 @@ Imports:
     tidyr,
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
