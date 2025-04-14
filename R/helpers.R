@@ -7,37 +7,6 @@ font <- "Gill Sans Nova"
 
 # Chart helpers -----------------------------------------------------------
 
-plot_map <- function(data, data_sub, borders = TRUE, fill = TRUE) {
-  
-  if (borders) stroke <- pal("grays", 2)
-  
-  
-  ggplot() + 
-    geom_sf(data = data, fill = pal("grays", 5), color = NA) +
-    geom_sf(
-      data = border, 
-      fill = NA, color = pal("grays", 2), linewidth = k(.05)
-    ) +
-    geom_sf(
-      data = data_sub, 
-      fill = NA, color = pal("grays", 3), linewidth = k(.025)
-    ) +
-    apply_theme("map", basesize = basesize, font = font) + 
-    theme(
-      legend.key.width = unit(1.25 * size$text, "points"),
-      legend.title = element_text(
-        size = size$text, 
-        hjust = .5,
-        margin = margin(l = k(3.5))
-      ),
-      legend.title.position = "right",
-      legend.box.spacing = unit(k(.25), "lines"),
-      plot.margin = margin(0, 0, k(2), 0)
-    )
-  
-}
-
-
 idmc_iom <- c(
   "AFG",
   "BEN",
@@ -102,6 +71,10 @@ break_lines <- function(column) {
   dict <- c(
     "Plurinational State of Bolivia" =
       "Plurinational State\nof Bolivia",
+    "Syrian Arab Republic" =
+      "Syrian Arab\nRepublic",
+    "Russian Federation" =
+      "Russian\nFederation",
     "China, Taiwan Province of China" =
       "Taiwan Province\nof China",
     "Democratic People's Republic of Korea" =
@@ -131,7 +104,7 @@ break_lines <- function(column) {
 
 set_axis <- function(values, units = "Persons") {
 
-  max_n <- max(values)
+  max_n <- max(values, na.rm = TRUE)
 
   write_title <- function(scale, units) {
     if (units == "USD") text <- paste0(scale, " ", units)
@@ -216,22 +189,32 @@ plot_label <- function(plot, label, span = 2, h = .06) {
     )
 }
 
-kosovo_disclaimer <- function(hero) {
-
-  text <- paste(
-    "References to Kosovo shall be understood to be in the context of United",
-    "Nations Security Council resolution 1244 (1999). "
-  )
-
-  if (hero == "XKX") {
-
-    return(text)
-
-  } else {
-
-    return_text <- ""
-    return(return_text)
+get_dims <- function(ticks, inwidth = 0, outwidth = .1) {
+  
+  biggap <- outwidth / (ticks - 1)
+  barwidthfull <- .9 / (ticks * 2)
+  barwidth <- barwidthfull * (1 - inwidth)
+  smallgap <- barwidthfull - barwidth
+  
+  xmin <- c()
+  for (i in 1:(ticks * 2)) {
+    xmin <- c(
+      xmin, 
+      biggap * ((i - 1) %/% 2) + barwidth * (i - 1) + smallgap * (i %/% 2)
+    )
   }
+  
+  table <- tibble(xmin = xmin) |> 
+    mutate(
+      xmax = xmin + barwidth,
+      mid1 = (xmin + xmax) / 2,
+      mid = (mid1 + lag(mid1)) / 2,
+      id = 1:n(),
+      xtick = ifelse(id %% 2 == 0, TRUE, FALSE)
+    ) |> 
+    select(-mid1, -id)
+  
+  return(table)
 }
 
 
@@ -259,6 +242,34 @@ admin1 <- sf::st_read(
   filter(!(adm0_a3 == "FRA" & type_en == "Overseas department")) |> 
   
   sf::st_make_valid()
+
+# plot_map <- function(data, data_sub, borders = TRUE, fill = TRUE) {
+#   
+#   if (borders) stroke <- pal("grays", 2)
+#   
+#   ggplot() + 
+#     geom_sf(data = data, fill = pal("grays", 5), color = NA) +
+#     geom_sf(
+#       data = border, 
+#       fill = NA, color = pal("grays", 2), linewidth = k(.05)
+#     ) +
+#     geom_sf(
+#       data = data_sub, 
+#       fill = NA, color = pal("grays", 3), linewidth = k(.025)
+#     ) +
+#     apply_theme("map", basesize = basesize, font = font) + 
+#     theme(
+#       legend.key.width = unit(1.25 * size$text, "points"),
+#       legend.title = element_text(
+#         size = size$text, 
+#         hjust = .5,
+#         margin = margin(l = k(3.5))
+#       ),
+#       legend.title.position = "right",
+#       legend.box.spacing = unit(k(.25), "lines"),
+#       plot.margin = margin(0, 0, k(2), 0)
+#     )
+# }
 
 nmig_rast <- system.file(
   "rasters", "nmig_2016_2020_avg.tif", package = "gdidata"
@@ -384,3 +395,23 @@ map_final <- function(base, title, source, basesize, font) {
   return(plot)
 }
 
+
+# Miscellaneous -----------------------------------------------------------
+
+kosovo_disclaimer <- function(hero) {
+  
+  text <- paste(
+    "References to Kosovo shall be understood to be in the context of United",
+    "Nations Security Council resolution 1244 (1999). "
+  )
+  
+  if (hero == "XKX") {
+    
+    return(text)
+    
+  } else {
+    
+    return_text <- ""
+    return(return_text)
+  }
+}
