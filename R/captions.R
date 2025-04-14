@@ -2,21 +2,12 @@
 get_pct <- function(vector, value) {
   pct <- 1 - ecdf(vector)(value)
   
-  # t10 <- '#box(baseline: .5pt, width: 5.5pt, image("inst/top10.png"))'
-  # t10 <- "top10"
-  # t33 <- "top33"
-  # m33 <- '#box(baseline: .5pt, width: 5.5pt, image("inst/mid33.png"))'
-  # b33 <- '#box(baseline: .5pt, width: 5.5pt, image("inst/bot33.png"))'
-  # b10 <- '#box(baseline: .5pt, width: 5.5pt, image("inst/bot10.png"))'
-  
   if (pct <= .1) return("top10")
   if (pct > .1 & pct <= 1/3) return("top33")
   if (pct > 1/3 & pct < 2/3) return("mid33")
   if (pct >= 2/3 & pct < .9) return("bot33")
   if (pct >= .9) return("bot10")
 }
-
-
 
 pl <- function(num) prettylabel(num, signif = 2, spell = TRUE)
 pl1 <- function(num) prettylabel(num, signif = 2, spell = TRUE)
