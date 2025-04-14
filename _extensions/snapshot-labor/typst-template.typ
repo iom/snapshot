@@ -17,6 +17,7 @@
 #let b(body) = text(weight: "bold", fill: color-dark)[#body]
 
 // Constants
+#let series-title = "GDI Country Data Snapshot"
 #let product-title = "GDI Country Data Snapshot: Labour Mobility"
 #let date-dmy = datetime.today().display(
   "[day padding:none] [month repr:long] [year]"
@@ -239,23 +240,12 @@
       
       #block[
         #pad(bottom: 3pt)[
-
-          #block[
-            #set text(size: fontsize-med, fill: color-dark)
-            #set par(leading: .5em)
+          #set text(size: fontsize-med, fill: color-dark)
+          #set par(leading: .5em)
             
-            This #text(weight: "bold")[#product-title] is a brief overview of migration-related statistics from global datasets compiled by UN agencies and other international organisations.
-          ]
+          The #text(weight: "bold")[#series-title] is a brief overview of migration-related statistics from global datasets compiled by UN agencies and other international organisations. This thematic Snapshot focuses on #text(weight: "bold")[Labour Mobility].
 
-          #block[
-            #set text(size: fontsize)
-            #set par(leading: .35em)
-            #set block(spacing: .85em)
-
-            Maps are for illustration purposes only. The boundaries and names shown and the designations used on maps do not imply official endorsement or acceptance by IOM.
-            
-            Data are subject to the inherent limitations of global datasets and should be considered as statistical baselines, especially in the absence of more precise local data. Figures may differ from those published by national statistics offices or other sources.
-          ]
+          Data are subject to the inherent limitations of global datasets and should be considered as statistical baselines, especially in the absence of more precise local data. Figures may differ from those published by national statistics offices or other sources.
         ]
       ]
     ],
