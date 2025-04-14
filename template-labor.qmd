@@ -59,6 +59,28 @@ i <- i + 2
 #pagebreak()
 ```
 
+```{=typst}
+#caption[
+`r caption_emp(code)`
+#colbreak()
+`r caption_empeduc(code)`
+]
+```
+
+```{r}
+#| fig-width: 6.7
+#| fig-height: 2.5
+#| message: false
+
+cowplot::plot_grid(
+  snap_plot("emp", code, basesize = basesize, font = font) |>
+    plot_label(i, h = .15 / 2.5),
+  snap_plot("empeduc", code, basesize = basesize, font = font) |>
+    plot_label(i + 1, h = .15 / 2.5)
+)
+i <- i + 2
+```
+
 <!-- ```{=typst} -->
 <!-- #caption[`r caption_migpyr(code)`] -->
 <!-- ``` -->
