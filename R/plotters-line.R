@@ -1,14 +1,14 @@
 
 plot_empty <- function(title, 
                        source, 
-                       time, 
+                       # time, 
                        basesize, 
                        font, 
                        msg = "No data") {
   
   k <- function(factor = 1) factor * basesize / .pt
 
-  plot <- ggplot(data.frame(t = time), aes(x = .data$t)) +
+  plot <- ggplot(data.frame(i = 1:10), aes(x = i)) +
     labs(title = title, caption = source) +
     apply_theme("line", basesize = basesize, font = font) +
     theme(
