@@ -54,16 +54,7 @@ caption_emp <- function(iso) {
   
   name <- namer(iso)
   
-  data <- read_csv("data/Employment_SexEducation.csv") |> 
-    rename(geo = Country, birth = PlaceOfBirth, sex = Sex, t = Year) |> 
-    filter(
-      "Native-born" %in% birth, 
-      "Foreign-born" %in% birth, 
-      .by = c(geo, t)
-    ) |> 
-    mutate(n = 1000 * Value) |> 
-    summarise(n = sum(n), .by = c(geo, birth, t))
-  
+  data <- snap_data("emp")$data |> drop_na()
   data_iso <- filter(data, geo == iso)
   
   if (nrow(data_iso) == 0) {
@@ -75,11 +66,6 @@ caption_emp <- function(iso) {
     data_iso_t1 <- filter(data_iso, t == max(t))
     t1 <- data_iso_t1$t[1]
     
-    # data_tot <- summarise(data, n = sum(n), .by = geo) |> pull(n)
-    # data_for <- filter(data, str_detect(var, "Foreign"))$n |> sum()
-    # data_dom <- filter(data, str_detect(var, "Native"))$n |> sum()
-    # data_fsh <- 100 * data_for / data_tot
-    
     data_iso_tot <- sum(data_iso_t1$n)
     data_iso_for <- filter(data_iso_t1, str_detect(birth, "Foreign"))$n |> sum()
     data_iso_dom <- filter(data_iso_t1, str_detect(birth, "Native"))$n |> sum()
@@ -88,65 +74,11 @@ caption_emp <- function(iso) {
     if (data_iso_fsh < 9.5) data_iso_fsh_lab <- pl_pct1(data_iso_fsh)
     if (data_iso_fsh < .5) data_iso_fsh_lab <- "\\<1%"
     
-    # caption1 <- str_glue(paste(
-    #   "The labor force of {name} comprised #b[{ pl(data_iso_t1_tot) }] people",
-    #   "in {t1} { get_pct(data_t1_tot, data_iso_t1_tot) }, of which",
-    #   "#b[{ pl(data_iso_t1_for) }] { get_pct(data_t1_for, data_iso_t1_for) }",
-    #   "(or #b[{ pl_pct(data_iso_t1_fsh) }]",
-    #   "{ get_pct(data_t1_fsh, data_iso_t1_fsh) }) were foreign-born."
-    # ))
-    
-    # agg_text <- str_glue(paste(
-    #   "#b[{ pl(data_iso_tot) }] { get_pct(data_tot, data_iso_tot) } people",
-    #   "were employed in {name} in {year}, of which #b[{ pl(data_iso_for) }]",
-    #   "{ get_pct(data_for, data_iso_for) } (or {data_iso_fsh_lab}",
-    #   "{ get_pct(data_fsh, data_iso_fsh) }) were foreign-born."
-    # ))
     agg_text <- str_glue(paste(
       "#b[{ pl(data_iso_tot) }] people were employed in {name} in {t1}, of",
       "which #b[{ pl(data_iso_for) }] (or {data_iso_fsh_lab}) were",
       "foreign-born."
     ))
-    
-    # data_t0t1 <- filter(data, t %in% c(t0, max(t))) |> 
-    #   pivot_wider(names_from = t, values_from = n) |> 
-    #   drop_na() |> 
-    #   pivot_longer(cols = -c(geo, var), names_to = "t", values_to = "n")
-    # 
-    # data_t0_for <- filter(data_t0t1, t == min(t), str_detect(var, "Foreign"))$n
-    # data_t0_dom <- filter(data_t0t1, t == min(t), str_detect(var, "Native"))$n
-    # data_t1_for <- filter(data_t0t1, t == max(t), str_detect(var, "Foreign"))$n
-    # data_t1_dom <- filter(data_t0t1, t == max(t), str_detect(var, "Native"))$n
-    # 
-    # data_iso_t0 <- filter(data_iso, t == t0)
-    # data_iso_t0_for <- filter(data_iso_t0, str_detect(var, "Foreign"))$n
-    # data_iso_t0_dom <- filter(data_iso_t0, str_detect(var, "Native"))$n
-    # 
-    # change_dom <- 100 * ((data_t1_dom / data_t0_dom)^(1 / (t1 - t0)) - 1)
-    # change_iso_dom <- 100 * 
-    #   ((data_iso_t1_dom / data_iso_t0_dom)^(1 / (t1 - t0)) - 1)
-    # change_for <- 100 * ((data_t1_for / data_t0_for)^(1 / (t1 - t0)) - 1)
-    # change_iso_for <- 100 * 
-    #   ((data_iso_t1_for / data_iso_t0_for)^(1 / (t1 - t0)) - 1)
-    # 
-    # verb <- "increased"
-    # if (change_iso_for < 0) verb <- "decreased"
-    # 
-    # caption2 <- str_glue(paste(
-    #   "The foreign-born labor force has {verb} by an average",
-    #   "#b[{ pl_pct(change_iso_for) }] { get_pct(change_for, change_iso_for) }",
-    #   "annually over {t0}–{t1}, compared to { pl_pct(change_iso_dom) }",
-    #   "{ get_pct(change_dom, change_iso_dom) } for the native-born labor force."
-    # ))
-    # 
-    # caption2 <- str_glue(paste(
-    #   "Employment of foreign-borns has {verb} by an average {}"
-    # ))
-    # 
-    # caption <- str_glue(
-    #   "- {caption1}\n",
-    #   "- {caption2}"
-    # )
     
     span <- max(data_iso$t) - min(data_iso$t)
     
@@ -204,7 +136,6 @@ caption_emp <- function(iso) {
         "- {change_text}"
       ))
     }
-    
   }
   
   return(caption)
@@ -213,24 +144,26 @@ caption_emp <- function(iso) {
 
 # Fig 2 -------------------------------------------------------------------
 
-caption_emp_disagg <- function(iso) {
+caption_empeduc <- function(iso) {
   
   name <- namer(iso)
   
-  data <- read_csv("data/Employment_SexEducation.csv") |> 
-    rename(
-      geo = Country, 
-      sex = Sex,
-      educ = Education, 
-      birth = PlaceOfBirth, 
-      t = Year,
-      n = Value
-    ) |> 
-    filter(t == max(t), .by = geo) |> 
-    mutate(educ = case_when(
-      educ == "Level not stated" ~ "Unknown",
-      .default = educ
-    ))
+  data <- snap_data("empeduc")$data
+  
+  # data <- read_csv("data-raw/Employment_SexEducation.csv") |> 
+  #   rename(
+  #     geo = Country, 
+  #     sex = Sex,
+  #     educ = Education, 
+  #     birth = PlaceOfBirth, 
+  #     t = Year,
+  #     n = Value
+  #   ) |> 
+  #   filter(t == max(t), .by = geo) |> 
+  #   mutate(educ = case_when(
+  #     educ == "Level not stated" ~ "Unknown",
+  #     .default = educ
+  #   ))
   
   data_iso <- filter(data, geo == iso)
   
@@ -240,14 +173,16 @@ caption_emp_disagg <- function(iso) {
     
   } else {
     
-    year <- data_iso$t[1]
-    educ_order <- c(
-      "Less than basic", 
-      "Basic", 
-      "Intermediate", 
-      "Advanced", 
-      "Unknown"
-    )
+    # year <- data_iso$t[1]
+    t1 <- snap_data("empeduc", iso)$range[2]
+    # educ_order <- c(
+    #   "Less than basic", 
+    #   "Basic", 
+    #   "Intermediate", 
+    #   "Advanced", 
+    #   "Unknown"
+    # )
+    educ_order <- snap_data("empeduc")$data$educ |> levels()
     educ_cats <- unique(filter(data_iso, birth == "Foreign-born") |> pull(educ))
     educ_cats <- educ_cats[order(match(educ_cats, educ_order))]
     
@@ -278,12 +213,14 @@ caption_emp_disagg <- function(iso) {
       if (length(educ_cats) == 3) {
         
         educ_text <- str_glue(paste(
-          "In {year}, #b[{ pl_pct(sh1_for$educ_sh) }] of employed foreign-borns",
+          "#b[{ pl_pct(sh1_for$educ_sh) }] of employed foreign-borns",
           "had { tolower(sh1_for$educ) } education,",
-          "#b[{ pl_pct(sh2_for$educ_sh) }] had { tolower(sh2_for$educ) } education and",
-          "#b[{ pl_pct(sh3_for$educ_sh) }] had { tolower(sh3_for$educ) } education",
-          "(compared to { pl_pct(sh1_dom$educ_sh) }, { pl_pct(sh2_dom$educ_sh) }",
-          "and { pl_pct(sh3_dom$educ_sh) }, respectively, for employed native-borns)."
+          "#b[{ pl_pct(sh2_for$educ_sh) }] had { tolower(sh2_for$educ) }",
+          "education and #b[{ pl_pct(sh3_for$educ_sh) }] had",
+          "{ tolower(sh3_for$educ) } education in {t1} (compared to",
+          "{ pl_pct(sh1_dom$educ_sh) }, { pl_pct(sh2_dom$educ_sh) } and",
+          "{ pl_pct(sh3_dom$educ_sh) }, respectively, for employed",
+          "native-borns)."
         ))
       }
       
@@ -293,13 +230,14 @@ caption_emp_disagg <- function(iso) {
       if (length(educ_cats) == 4 & educ_cats[4] == "Unknown") {
         
         educ_text <- str_glue(paste(
-          "In {year}, #b[{ pl_pct(sh1_for$educ_sh) }] of employed foreign-borns",
+          "#b[{ pl_pct(sh1_for$educ_sh) }] of employed foreign-borns",
           "had { tolower(sh1_for$educ) } education,",
-          "#b[{ pl_pct(sh2_for$educ_sh) }] had { tolower(sh2_for$educ) } education and",
-          "#b[{ pl_pct(sh3_for$educ_sh) }] had { tolower(sh3_for$educ) } education",
-          "(compared to { pl_pct(sh1_dom$educ_sh) }, { pl_pct(sh2_dom$educ_sh) }",
-          "and { pl_pct(sh3_dom$educ_sh) }, respectively, for employed native-borns).",
-          "The remaining shares had unknown educational levels."
+          "#b[{ pl_pct(sh2_for$educ_sh) }] had { tolower(sh2_for$educ) }",
+          "education and #b[{ pl_pct(sh3_for$educ_sh) }] had",
+          "{ tolower(sh3_for$educ) } education in {t1} (compared to",
+          "{ pl_pct(sh1_dom$educ_sh) }, { pl_pct(sh2_dom$educ_sh) } and",
+          "{ pl_pct(sh3_dom$educ_sh) }, respectively, for employed",
+          "native-borns). The remaining shares had unknown educational levels."
         ))
       }
       
@@ -311,7 +249,7 @@ caption_emp_disagg <- function(iso) {
         sh4_for <- filter(data_educ_for, educ == educ_cats[4])
         
         educ_text <- str_glue(paste(
-          "In {year}, #b[{ pl_pct(sh1_for$educ_sh) }] of employed foreign-borns",
+          "In {t1}, #b[{ pl_pct(sh1_for$educ_sh) }] of employed foreign-borns",
           "had { tolower(sh1_for$educ) } education,",
           "#b[{ pl_pct(sh2_for$educ_sh) }] had { tolower(sh2_for$educ) } education,",
           "#b[{ pl_pct(sh3_for$educ_sh) }] had { tolower(sh3_for$educ) } education and",
@@ -330,7 +268,7 @@ caption_emp_disagg <- function(iso) {
         sh4_for <- filter(data_educ_for, educ == educ_cats[4])
         
         educ_text <- str_glue(paste(
-          "In {year}, #b[{ pl_pct(sh1_for$educ_sh) }] of employed foreign-borns",
+          "In {t1}, #b[{ pl_pct(sh1_for$educ_sh) }] of employed foreign-borns",
           "had { tolower(sh1_for$educ) } education,",
           "#b[{ pl_pct(sh2_for$educ_sh) }] had { tolower(sh2_for$educ) } education,",
           "#b[{ pl_pct(sh3_for$educ_sh) }] had { tolower(sh3_for$educ) } education and",
