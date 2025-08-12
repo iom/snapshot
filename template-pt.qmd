@@ -1,12 +1,12 @@
 ---
-title: "Mexico"
-output-file: "mexico"
-iso: "MEX"
+title: "Guiné-Bissau"
+output-file: "guinea-bissau"
+iso: "GNB"
 execute:
   echo: false
   warning: false
 format:
-  gdi-country-snapshot-typst: default
+  snapshot-pt-typst: default
 ---
 
 ```{r}
@@ -19,11 +19,11 @@ j <- 0
 ```
 
 ```{=typst}
-#header(name: "I. Migration")
+#header(name: "I. MIGRAÇÃO")
 ```
 
 ```{=typst}
-`r caption_stocks(code)`
+`r caption_stocks_pt(code)`
 ```
 
 ```{r}
@@ -31,7 +31,7 @@ j <- 0
 #| fig-height: 2.75
 #| message: false
 
-snap_plot("stocks", code, basesize = basesize, font = font) |> 
+snap_plot("stocks_pt", code, basesize = basesize, font = font) |> 
   plot_label(i, span = 1, h = .15 / 2.75)
 i <- i + 1
 ```
@@ -41,7 +41,7 @@ i <- i + 1
 #| fig-height: 2.25
 #| message: false
 
-snap_plot("nats", code, basesize = basesize, font = font) |> 
+snap_plot("nats_pt", code, basesize = basesize, font = font) |> 
   plot_label(i, span = 1, h = .15 / 2.25)
 i <- i + 1
 ```
@@ -52,7 +52,7 @@ i <- i + 1
 ```
 
 ```{=typst}
-#caption[`r caption_migpyr(code)`]
+#caption[`r caption_migpyr_pt(code)`]
 ```
 
 ```{r}
@@ -60,13 +60,13 @@ i <- i + 1
 #| fig-height: 2.50
 #| message: false
 
-snap_plot("migpyr", code, basesize = basesize, font = font) |> 
+snap_plot("migpyr_pt", code, basesize = basesize, font = font) |> 
   plot_label(i, span = 1, h = .15 / 2.50)
 i <- i + 1
 ```
 
 ```{=typst}
-#caption[`r caption_nmig(code)`]
+#caption[`r caption_nmig_pt(code)`]
 ```
 
 ```{r}
@@ -75,16 +75,16 @@ i <- i + 1
 #| message: false
 
 cowplot::plot_grid(
-  snap_plot("nmig", code, basesize = basesize, font = font) |> 
+  snap_plot("nmig_pt", code, basesize = basesize, font = font) |> 
     plot_label(i, h = .15 / 2.50),
-  plot_nmigmap(code, basesize = basesize, font = font) |> 
+  plot_nmigmap_pt(code, basesize = basesize, font = font) |> 
     plot_label(i + 1, h = .15 / 2.50)
 )
 i <- i + 2
 ```
 
 ```{=typst}
-`r caption_idp(code)`
+`r caption_idp_pt(code)`
 ```
 
 ```{r}
@@ -92,7 +92,7 @@ i <- i + 2
 #| fig-height: 2.25
 #| message: false
 
-snap_plot("idp", code, basesize = basesize, font = font) |> 
+snap_plot("idp_pt", code, basesize = basesize, font = font) |> 
   plot_label(i, span = 1, h = .15 / 2.25)
 i <- i + 1
 ```
@@ -108,16 +108,16 @@ i <- i + 1
 #| message: false
 
 cowplot::plot_grid(
-  snap_plot("idpmap", code, basesize = basesize, font = font) |> 
+  snap_plot("idpmap_pt", code, basesize = basesize, font = font) |> 
     plot_label(i, h = .15 / 2.75),
-  snap_plot("idcause", code, basesize = basesize, font = font) |> 
+  snap_plot("idcause_pt", code, basesize = basesize, font = font) |> 
     plot_label(i + 1, h = .15 / 2.75)
 )
 i <- i + 2
 ```
 
 ```{=typst}
-#caption[`r caption_mmp(code)`]
+#caption[`r caption_mmp_pt(code)`]
 ```
 
 ```{r}
@@ -126,9 +126,9 @@ i <- i + 2
 #| message: false
 
 cowplot::plot_grid(
-  snap_plot("mmp", code, basesize = basesize, font = font) |> 
+  snap_plot("mmp_pt", code, basesize = basesize, font = font) |> 
     plot_label(i, h = .15 / 2.50),
-  snap_plot("mmpmap", code, basesize = basesize, font = font) |> 
+  snap_plot("mmpmap_pt", code, basesize = basesize, font = font) |> 
     plot_label(i + 1, h = .15 / 2.50)
 )
 i <- i + 2
@@ -136,9 +136,9 @@ i <- i + 2
 
 ```{=typst}
 #caption[
-`r caption_refug_orig(code)`
+`r caption_refug_orig_pt(code)`
 #colbreak()
-`r caption_refug_host(code)`
+`r caption_refug_host_pt(code)`
 ]
 ```
 
@@ -147,7 +147,7 @@ i <- i + 2
 #| fig-height: 2.75
 #| message: false
 
-snap_plot("refug", code, basesize = basesize, font = font) |> 
+snap_plot("refug", code, basesize = basesize, font = font, lang = "pt") |> 
   plot_label(i, span = 1, h = .15 / 2.75)
 i <- i + 1
 ```
@@ -159,11 +159,11 @@ i <- i + 1
 
 ```{=typst}
 #caption[
-`r caption_remin(code)`
-`r caption_remout(code)`
+`r caption_remin_pt(code)`
+`r caption_remout_pt(code)`
 #colbreak()
-`r caption_fdiin(code)`
-`r caption_fdiout(code)`
+`r caption_fdiin_pt(code)`
+`r caption_fdiout_pt(code)`
 ]
 ```
 
@@ -173,9 +173,9 @@ i <- i + 1
 #| message: false
 
 cowplot::plot_grid(
-  snap_plot("remt", code, basesize = basesize, font = font) |> 
+  snap_plot("remt", code, basesize = basesize, font = font, lang = "pt") |> 
     plot_label(i, h = .15 / 2.25),
-  snap_plot("fdi", code, basesize = basesize, font = font) |> 
+  snap_plot("fdi", code, basesize = basesize, font = font, lang = "pt") |> 
     plot_label(i + 1, h = .15 / 2.25)
 )
 i <- i + 2
@@ -183,18 +183,18 @@ i <- i + 2
 
 ```{=typst}
 #header(
-  name: "II. Demographics and Economy",
-  note: "Data in this section refer to the general population of `r gdidata::countryname(rmarkdown::metadata$iso, to = 'name_text')` (i.e., migrant and non-migrant population)."
+  name: "II. DEMOGRAFIA E ECONOMIA",
+  note: "Os dados nesta secção referem-se à população geral da `r gdidata::countryname(rmarkdown::metadata$iso, to = 'name_text')` (ou seja, população migrante e não migrante)."
 )
 ```
 
 ```{=typst}
 #caption(ncol: 3)[
-`r caption_pop(code)`
+`r caption_pop_pt(code)`
 #colbreak()
-`r caption_birth(code)`
+`r caption_birth_pt(code)`
 #colbreak()
-`r caption_depend(code)`
+`r caption_depend_pt(code)`
 ]
 ```
 
@@ -204,11 +204,11 @@ i <- i + 2
 #| message: false
 
 cowplot::plot_grid(
-  snap_plot("pop", code, basesize = basesize, font = font) |> 
+  snap_plot("pop", code, basesize = basesize, font = font, lang = "pt") |> 
     plot_label(i, span = 3, h = .15 / 2.18),
-  snap_plot("birth", code, basesize = basesize, font = font) |> 
+  snap_plot("birth", code, basesize = basesize, font = font, lang = "pt") |> 
     plot_label(i + 1, span = 3, h = .15 / 2.18),
-  snap_plot("depend", code, basesize = basesize, font = font) |> 
+  snap_plot("depend", code, basesize = basesize, font = font, lang = "pt") |> 
     plot_label(i + 2, span = 3, h = .15 / 2.18),
   nrow = 1
 )
@@ -217,11 +217,11 @@ i <- i + 3
 
 ```{=typst}
 #caption(ncol: 3)[
-`r caption_income(code)`
+`r caption_income_pt(code)`
 #colbreak()
-`r caption_unem(code)`
+`r caption_unem_pt(code)`
 #colbreak()
-`r caption_inf(code)`
+`r caption_inf_pt(code)`
 ]
 ```
 
@@ -231,11 +231,11 @@ i <- i + 3
 #| message: false
 
 cowplot::plot_grid(
-  snap_plot("income", code, basesize = basesize, font = font) |> 
+  snap_plot("income", code, basesize = basesize, font = font, lang = "pt") |> 
     plot_label(i, span = 3, h = .15 / 2.18),
-  snap_plot("unem", code, basesize = basesize, font = font) |> 
+  snap_plot("unem", code, basesize = basesize, font = font, lang = "pt") |> 
     plot_label(i + 1, span = 3, h = .15 / 2.18),
-  snap_plot("inf", code, basesize = basesize, font = font) |> 
+  snap_plot("inf", code, basesize = basesize, font = font, lang = "pt") |> 
     plot_label(i + 2, span = 3, h = .15 / 2.18),
   nrow = 1
 )

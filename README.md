@@ -17,4 +17,7 @@ devtools::install_github("ksreyes/snapshot")
 ## Usage
 
 Run `render_snapshot(iso)` to generate a snapshot, where `iso` is the
-three-letter ISO3 code of the country of interest.
+three-letter ISO3 code of the country of interest. See
+`sample_scripts.R` for generating Snapshots for a list of countries.
+
+## Technical details

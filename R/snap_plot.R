@@ -7,8 +7,6 @@
 #' @param font Font family. Default is Open Sans.
 #' @param ... Optional arguments.
 #'
-#' @description If `iso=NULL`, function returns `key` plot's metadata.
-#'
 #' @returns `ggplot2` object or a list of metadata.
 #'
 #' @export

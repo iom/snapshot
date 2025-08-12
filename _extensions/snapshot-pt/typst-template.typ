@@ -17,8 +17,7 @@
 #let b(body) = text(weight: "bold", fill: color-dark)[#body]
 
 // Constants
-#let series-title = "GDI Country Data Snapshot"
-#let product-title = "GDI Country Data Snapshot: Labour Mobility"
+#let product-title = "IGB Resumo de Dados do País" 
 #let date-dmy = datetime.today().display(
   "[day padding:none] [month repr:long] [year]"
 )
@@ -61,11 +60,6 @@
     ],
     grid.cell(colspan: 2, rect(width: 100%))
   )
-}
-
-#let chartitle(title) = {
-  set text(weight: "bold", size: fontsize-med)
-  align(center)[#title]
 }
 
 // Caption formatting
@@ -129,9 +123,29 @@
     },
 
     // Footer shows explanation of value distribution icons
-    footer: context [
+    footer: [
       #set align(center)
       #set text(fill: color-subtle)
+      #set par(leading: .2em)
+
+      #let padding = box(width: .5em)
+      #let padding-small = box(width: .25em)
+      #let icon-legend(key, key-text) = {
+        text(key)
+        padding-small
+        text(key-text)
+        padding
+      }
+
+      Ícones indicam como os números #h(1fr) \
+      se comparam à distribuição global:
+      #box(width: 2em)
+      #icon-legend("top10", "Os 10% mais altos de todos os países")
+      #icon-legend("top33", "Terço superior")
+      #icon-legend("mid33", "Terço médio")
+      #icon-legend("bot33", "Terço inferior")
+      #icon-legend("bot10", "Os 10% mais baixos")
+      #h(1fr)
       #counter(page).display("1")
     ]
   )
@@ -193,7 +207,7 @@
 
         #let citation = block[
           #set text(fill: color-fade)
-          Cite as: International Organization for Migration, Global Data Institute. #date-ymd #text(style: "italic")[#product-title: #title.]
+          Cite como: International Organization for Migration, Global Data Institute. #date-ymd #text(style: "italic")[GDI Country Data Snapshot: #title.]
         ]
 
         #product
@@ -208,33 +222,44 @@
   )
 
   // About and contents boxes
-
-  let figure = text(style: "italic", fill: color-subtle)[→ Figure]
-  let figures = text(style: "italic", fill: color-subtle)[→ Figures]
+  
+  let figure = text(style: "italic", fill: color-subtle)[→ Figura]
+  let figures = text(style: "italic", fill: color-subtle)[→ Figuras]
   let nbox(body) = {
     set text(size: .65em, weight: "bold", fill: white)
     box(
       fill: color-number, 
-      inset: (x: 1.5pt, y: .7pt),
+      inset: (x: 1.5pt, y: .9pt),
       outset: (y: 1.5pt)
     )[#body]
   }
 
   grid(
-    columns: (30%, 1%, 1fr, 1fr),
+    columns: (35%, 1%, 1fr),
 
     block(fill: color-light, inset: 1.1em)[
 
-      == ABOUT
+      == SOBRE
       
       #block[
         #pad(bottom: 3pt)[
-          #set text(size: fontsize-med, fill: color-dark)
-          #set par(leading: .5em)
-          
-          The #text(weight: "bold")[Labour Mobility Snapshot] is a brief overview of labour migration-related statistics from global datasets compiled by UN agencies and other international organisations. General migration-related statistics are provided in the Country Data Snapshots, available #link("https://iomint.sharepoint.com/sites/GDICountryDataSnapshot")[here].
 
-          Data are subject to the inherent limitations of global datasets and should be considered as statistical baselines. Figures may differ from those published by national statistics offices or other sources.
+          #block[
+            #set text(size: fontsize-med, fill: color-dark)
+            #set par(leading: .5em)
+            
+            Este #text(weight: "bold")[Resumo de Dados do País] é uma breve visão geral de estatísticas relacionadas com a migração, provenientes de conjuntos de dados globais compilados por agências da ONU e outras organizações internacionais.
+          ]
+
+          #block[
+            #set text(size: fontsize)
+            #set par(leading: .35em)
+            #set block(spacing: .85em)
+
+            Os mapas são apenas para fins ilustrativos. As fronteiras e os nomes apresentados e as designações utilizadas nos mapas não implicam endosso ou aceitação oficial por parte da OIM. 
+
+            Os dados estão sujeitos às limitações inerentes aos conjuntos de dados globais e devem ser considerados como linhas de base estatísticas, especialmente na ausência de dados locais mais precisos. Os números podem diferir dos publicados por serviços nacionais de estatística ou outras fontes.
+          ]
         ]
       ]
     ],
@@ -243,50 +268,29 @@
 
     block(inset: .8em)[
 
-      == CONTENTS
+      == CONTEÚDO
       
       #pad(bottom: 3pt)[
         #block[
-          #set text(size: fontsize, fill: color-main)
+          #set text(size: fontsize-med, fill: color-main)
           #set par(leading: .5em)
           #set block(spacing: 1em)
 
-          #b[Demography and employment of migrants]
+          - Quantos emigrantes e imigrantes existem? Quais são os seus destinos e origens? Qual a sua estrutura etária e de sexo? #figures #nbox[1] #nbox[2] #nbox[3]
 
-          - Where have immigrants come from, and what is their demographic structure? #figures #nbox[1] #nbox[2] #nbox[3]
+          - Quais são as tendências e padrões da migração líquida? #figures #nbox[4] #nbox[5]
 
-          - How many foreign- and native-borns are employed, and what are their skill level and sex distributions? \ #figures #nbox[4] #nbox[5]
+          - Quando e onde ocorreram deslocamentos? Quais são as causas? #figures #nbox[6] #nbox[7]
 
-          - How do unemployment rates compare between foreign- and native-borns, and how do they vary by skill level and sex? #figures #nbox[6] #nbox[7]
+          - Quando e onde migrantes morreram ou desapareceram? #figures #nbox[8] #nbox[9] #nbox[10]
 
-          - What are average working hours and wages of employed foreign- and native-borns? #figures #nbox[8] #nbox[9]
+          - Quantos refugiados existem? #figure #nbox[11]
 
-          - Which economic sectors do immigrants work in? \ #figure #nbox[10]
-        ]
-      ]
-    ],
+          - Qual o volume das remessas e do investimento direto estrangeiro? #figures #nbox[12] #nbox[13]
 
-    block(inset: .8em)[
+          - Quais são as características demográficas da população em geral? #figures #nbox[14] #nbox[15] #nbox[16]
 
-      #pad(bottom: 3pt)[
-        #block[
-          #set text(size: fontsize, fill: color-main)
-          #set par(leading: .5em)
-          #set block(spacing: 1em)
-
-          #b[Employment and performance by economic sector]
-
-          -	How do different economic sectors compare in terms of value added and export volume? #figures #nbox[11] #nbox[12]
-
-          -	How are employment and skill levels distributed across economic sectors? #figure #nbox[13]
-
-          -	Which economic sectors did unemployed persons previous work in? #figure #nbox[14]
-
-          #b[Skill and sector distribution in other countries]
-
-          -	How does the national skill level distribution compare to that in migrant origin countries and in countries worldwide? #figure #nbox[15]
-
-          -	How does the sectoral employment and unemployment distribution compare with that in migrant origin countries and in countries worldwide? \ #figure #nbox[16]
+          - Como se desenvolveram os indicadores económicos? #figures #nbox[17] #nbox[18] #nbox[19]
         ]
       ]
     ]
@@ -302,6 +306,6 @@
     #set par(leading: .5em, justify: true)
     #set text(size: fontsize-small, fill: color-subtle)
 
-     This Labour Mobility Snapshot was prepared by the Global Data Institute (GDI) of the International Organization for Migration (IOM) using the publishing system Quarto. Charts and captions were generated using R and layouting was done using Typst. For questions and suggestions, contact datasnapshots\@iomint.onmicrosoft.com. #text(size: .75em, fill: color-fade)[v. #version]
+    Este Resumo de Dados do País foi preparado pelo Instituto Global de Dados (IGD) da Organização Internacional para as Migrações (OIM) usando o sistema de publicação Quarto. Os gráficos e legendas foram gerados usando R e a paginação foi feita usando Typst. Para perguntas e sugestões, entre em contacto com datasnapshots\@iomint.onmicrosoft.com. #text(size: .75em, fill: color-fade)[v. #version]
   ]
 }

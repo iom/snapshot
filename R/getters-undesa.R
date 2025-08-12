@@ -81,6 +81,7 @@ get_immdep <- function(iso = NULL) {
     summarise(n = sum(n), .by = c(geo, t, group)) |> 
     pivot_wider(names_from = group, values_from = n) |> 
     mutate(v_immig = 100 * dependent / working) |> 
+    drop_na(v_immig) |> 
     select(geo, t, v_immig)
   
   data <- data_immig |> 
@@ -94,8 +95,11 @@ get_immdep <- function(iso = NULL) {
     )
   
   output$data <- data
-  output$max_t <- max(data$t)
-  output$range <- ranger(data)
+  
+  if (nrow(data) > 0) {
+    output$max_t <- max(data$t)
+    output$range <- ranger(data)
+  }
   
   return(output)
 }

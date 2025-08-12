@@ -127,8 +127,8 @@
       #set align(center)
       #set text(fill: color-subtle)
 
-      #let padding = box(width: 1em)
-      #let padding-small = box(width: .5em)
+      #let padding = box(width: .5em)
+      #let padding-small = box(width: .25em)
       #let icon-legend(key, key-text) = {
         text(key)
         padding-small
@@ -143,6 +143,8 @@
       #icon-legend("mid33", "Middle third")
       #icon-legend("bot33", "Bottom third")
       #icon-legend("bot10", "Bottom 10%")
+      #h(1fr)
+      #counter(page).display("1")
     ]
   )
 
@@ -218,6 +220,17 @@
   )
 
   // About and contents boxes
+  
+  let figure = text(style: "italic", fill: color-subtle)[→ Figure]
+  let figures = text(style: "italic", fill: color-subtle)[→ Figures]
+  let nbox(body) = {
+    set text(size: .65em, weight: "bold", fill: white)
+    box(
+      fill: color-number, 
+      inset: (x: 1.5pt, y: .9pt),
+      outset: (y: 1.5pt)
+    )[#body]
+  }
 
   grid(
     columns: (35%, 1%, 1fr),
@@ -261,31 +274,21 @@
           #set par(leading: .5em)
           #set block(spacing: 1em)
 
-          #let figure = text(style: "italic", fill: color-subtle)[→ Figure]
-          #let nbox(body) = {
-            set text(size: .65em, weight: "bold", fill: white)
-            box(
-              fill: color-number, 
-              inset: (x: 1.5pt, y: .9pt),
-              outset: (y: 1.5pt)
-            )[#body]
-          }
+          - How many emigrants and immigrants are there? What are their destinations and origins? What is their age and sex structure? #figures #nbox[1] #nbox[2] #nbox[3]
 
-          - How many emigrants and immigrants are there? What are their destinations and origins? What is their age and sex structure? #figure #nbox[1] #nbox[2] #nbox[3]
+          - What are trends and patterns of net migration? #figures #nbox[4] #nbox[5]
 
-          - What are trends and patterns of net migration? #figure #nbox[4] #nbox[5]
+          - When and where have displacements occurred? What are the causes? #figures #nbox[6] #nbox[7]
 
-          - When and where have displacements occurred? What are the causes? #figure #nbox[6] #nbox[7]
+          - When and where have migrants died or gone missing? #figures #nbox[8] #nbox[9] #nbox[10]
 
-          - When and where have migrants died or gone missing? #figure #nbox[8] #nbox[9] #nbox[10]
+          - How many refugees are there? #figure #nbox[11]
 
-          - How many refugees are there?#figure #nbox[11]
+          - How large are remittances and foreign direct investment? #figures #nbox[12] #nbox[13]
 
-          - How large are remittances and foreign direct investment? #figure #nbox[12] #nbox[13]
+          - What are the demographic features of the overall population? #figures #nbox[14] #nbox[15] #nbox[16]
 
-          - What are the demographic features of the overall population? #figure #nbox[14] #nbox[15] #nbox[16]
-
-          - How have economic indicators developed? #figure #nbox[17] #nbox[18] #nbox[19]
+          - How have economic indicators developed? #figures #nbox[17] #nbox[18] #nbox[19]
         ]
       ]
     ]

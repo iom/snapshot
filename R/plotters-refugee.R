@@ -4,27 +4,57 @@
 plot_refug <- function(hero,
                        basesize,
                        font,
-                       title = paste0(
-                         "Refugee populations, ",
-                         plot_data("refug", hero)$range |>
-                           paste(collapse = "\u2013")
-                       )) {
+                       title = NULL,
+                       lang = "en") {
   
   k <- function(factor = 1) factor * basesize / .pt
+  name <- namer(hero, lang = lang)
+  
+  if (is.null(title)) {
+    plot_title <- paste0(
+      "Refugee populations, ",
+      snap_data("refug", hero)$range |> paste(collapse = "\u2013")
+    )
+  }
   source <- "Source: UNHCR."
-  name <- namer(hero)
   
   orig_disp <- paste0("Refugees from ", name, "\nand where they are hosted")
   host_disp <- paste0("Refugees hosted in ", name, "\nand where they come from")
   
-  timespan <- unique(plot_data("refug")$data$t) |> sort()
-  data <- plot_data("refug", hero)$data
+  others <- "Others"
+  unknown <- "Unknown"
+  total <- "Total"
+  persons <- "Persons"
+  
+  if (lang == "pt") {
+    
+    if (is.null(title)) {
+      plot_title <- paste0(
+        "Populações de refugiados, ",
+        snap_data("refug", hero)$range |> paste(collapse = "\u2013")
+      )
+    }
+    source <- "Fonte: ACNUR."
+    
+    orig_disp <- paste0("Refugiados da ", name, "\ne onde estão acolhidos")
+    host_disp <- paste0("Refugiados da ", name, "\ne de onde veem")
+    
+    others <- "Outros"
+    unknown <- "Desconhecido"
+    total <- "Total"
+    persons <- "Pessoas"
+  }
+  
+  timespan <- unique(snap_data("refug")$data$t) |> sort()
+  
+  data <- snap_data("refug", hero, lang = lang)$data
   
   plot_elements <- list(
-    facet_wrap(~forcats::fct_relevel(.data$panel, host_disp, after = Inf)),
-    labs(title = title, caption = source),
+    facet_wrap(~forcats::fct_relevel(panel, host_disp, after = Inf)),
+    labs(title = plot_title, caption = source),
     scale_x_discrete(expand = expansion(mult = .05)),
     guides(fill = guide_legend(nrow = 2)),
+    
     apply_theme("bar-vertical", basesize = basesize, font = font, facets = TRUE),
     theme(
       legend.position = "bottom",
@@ -39,16 +69,17 @@ plot_refug <- function(hero,
   if (nrow(data) > 0) {
     
     df <- data |>
-      mutate(panel = ifelse(.data$panel == "orig", orig_disp, host_disp)) |> 
+      mutate(panel = ifelse(panel == "orig", orig_disp, host_disp)) |> 
       complete(
         t = timespan, 
         panel = c(orig_disp, host_disp),
-        fill = list(nat_name = "Unknown", n = 0)
+        fill = list(nat_name = unknown, n = 0)
       )
-
+    
     nats <- levels(df$nat_name)[
-      !(levels(df$nat_name) %in% c("Unknown", "Others"))
+      !(levels(df$nat_name) %in% c(unknown, others))
     ]
+    nats_n <- length(nats)
     
     colors <- c(
       pal("blues", 2),
@@ -59,23 +90,24 @@ plot_refug <- function(hero,
       pal("yellows", 2)
     )
     
-    nat_fill <- colors[1:length(nats)]
+    nat_fill <- colors[1:nats_n]
     names(nat_fill) <- nats
     nat_fill <- c(
       nat_fill, 
-      "Unknown" = pal("grays", 3),
-      "Others" = pal("grays", 4)
+      pal("grays", 3),
+      pal("grays", 4)
     )
+    names(nat_fill)[(nats_n + 1):(nats_n + 2)] <- c(unknown, others)
     
     df_tot <- df |>
-      summarise(n = sum(.data$n), .by = c(.data$t, .data$panel)) |>
-      mutate(lab = ifelse(.data$n == 0, "", prettylabel(.data$n)))
+      summarise(n = sum(n), .by = c(t, panel)) |>
+      mutate(lab = ifelse(n == 0, "", prettylabel(n)))
     
-    axis <- set_axis(df_tot$n, "Persons")
+    axis <- set_axis(df_tot$n, persons, lang = "pt")
     
-    plot <- ggplot(df, aes(x = factor(.data$t), y = .data$n)) +
+    plot <- ggplot(df, aes(x = factor(t), y = n)) +
       geom_bar(
-        aes(fill = .data$nat_name),
+        aes(fill = nat_name),
         stat = "identity", position = "stack", width = .8
       ) +
       geom_hline(
@@ -85,8 +117,7 @@ plot_refug <- function(hero,
       ) +
       plot_elements +
       geom_text(
-        aes(x = factor(.data$t), y = .data$n, label = .data$lab),
-        df_tot,
+        aes(x = factor(t), y = n, label = lab), df_tot,
         color = pal("blues"),
         family = font,
         fontface = "bold",
@@ -117,7 +148,7 @@ plot_refug <- function(hero,
       n = 0
     )
     
-    plot <- ggplot(df, aes(x = factor(.data$t), y = .data$n)) +
+    plot <- ggplot(df, aes(x = factor(t), y = n)) +
       geom_bar(stat = "identity") +
       plot_elements +
       theme(
@@ -129,7 +160,7 @@ plot_refug <- function(hero,
     
     plot <- ggdraw(plot) +
       draw_label(
-        "No data",
+        "Nenhum dado",
         x = .250,
         y = .5,
         fontfamily = font,
@@ -137,7 +168,7 @@ plot_refug <- function(hero,
         size = k(3)
       ) +
       draw_label(
-        "No data",
+        "Nenhum dado",
         x = .750,
         y = .5,
         fontfamily = font,

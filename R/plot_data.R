@@ -360,202 +360,202 @@ plot_data <- function(key, iso = NULL, ...) {
   
   # Refugees ----------------------------------------------------------------
   
-  if (key == "refug") {
-    
-    panel_orig <- paste0(
-      "Refugees from ", name, " and where they are hosted"
-    )
-    panel_host <- paste0(
-      "Refugees hosted in ", name, " and where they come from"
-    )
-    
-    years <- c(seq(1990, 2020, 5), 2021:max(gdidata::unhcr$t))
-    
-    dataset <- gdidata::unhcr |>
-      filter(
-        (.data$t %in% years | .data$t == max(.data$t)),
-        .data$group == "refugee"
-      )
-    
-    # check <- filter(dataset, t == max(t), .by = geo) |>
-    #   group_by(geo) |>
-    #   arrange(desc(n), by_group = TRUE) |>
-    #   slice_head(n = 3) |>
-    #   ungroup()
-    
-    if (is.null(iso)) {
-      
-      output$data <- bind_rows(
-        dataset |> 
-          summarise(n = sum(n), .by = c(from, t)) |> 
-          rename(geo = from) |> 
-          mutate(panel = "orig"),
-        dataset |> 
-          summarise(n = sum(n), .by = c(geo, t)) |> 
-          mutate(panel = "host")
-      )
-      
-    } else {
-      
-      orig <- filter(dataset, .data$from == iso)
-      
-      if (nrow(orig) > 0) {
-        
-        orig_top_t1 <- filter(orig, .data$t == max(t)) |>
-          arrange(desc(.data$n)) |>
-          slice_head(n = 3)
-        orig_top_names <- gdidata::countryname(orig_top_t1$geo, to = "name_text")
-        orig <- orig |>
-          mutate(
-            nat = ifelse(.data$geo %in% orig_top_t1$geo, .data$geo, "Others"),
-            nat_name = ifelse(
-              .data$nat == "Others",
-              .data$nat, 
-              countryname(.data$nat, to = "name_text") |> suppressWarnings()
-            )
-          ) |>
-          summarise(
-            n = sum(.data$n), 
-            .by = c(.data$nat, .data$nat_name, .data$t)
-          ) |>
-          mutate(panel = "orig") |>
-          complete(
-            t = years,
-            tidyr::nesting(nat, nat_name, panel),
-            fill = list(n = 0)
-          )
-        
-      } else orig_top_names <- ""
-
-      host <- filter(dataset, .data$geo == iso)
-      
-      if (nrow(host) > 0) {
-
-        host_without_unknown <- filter(host, .data$from != "OOO")
-        host_top_t1 <- filter(host_without_unknown, .data$t == max(t)) |>
-          arrange(desc(.data$n)) |>
-          slice_head(n = 3)
-        host_top_names <- gdidata::countryname(host_top_t1$from, to = "name_text")
-        host <- host |>
-          mutate(
-            nat = case_when(
-              .data$from %in% c(host_top_t1$from, "OOO") ~ .data$from, 
-              .default = "Others"
-            ),
-            nat_name = ifelse(
-              .data$nat == "Others",
-              .data$nat, 
-              countryname(.data$nat, to = "name_text") |> suppressWarnings()
-            )
-          ) |>
-          summarise(
-            n = sum(.data$n), 
-            .by = c(.data$nat, .data$nat_name, .data$t)
-          ) |>
-          mutate(panel = "host") |>
-          complete(
-            t = years,
-            tidyr::nesting(nat, nat_name, panel),
-            fill = list(n = 0)
-          )
-      } else {
-        host <- host |> rename(nat = from)
-        host_top_names <- NULL
-      }
-        
-      output$data <- bind_rows(orig, host)
-      
-      if (nrow(output$data) > 0) {
-        
-        output$data <- output$data |>
-          mutate(nat_name = factor(.data$nat_name, levels = c(
-            unique(c(orig_top_names, host_top_names)),
-            "Unknown", "Others"
-          )))
-        
-        agg <- output$data |>
-          summarise(n = sum(.data$n), .by = c(.data$t, .data$panel)) |>
-          mutate(nat_name = "Total")
-        
-        # output$print <- bind_rows(agg, output$data) |>
-        #   mutate(Panel = ifelse(.data$panel == "orig", panel_orig, panel_host)) |>
-        #   select(.data$Panel, .data$nat_name, Year = .data$t, .data$n) |>
-        #   arrange(.data$Panel,.data$Year) |>
-        #   pivot_wider(names_from = .data$nat_name, values_from = .data$n) |>
-        #   select(
-        #     "Panel", "Year", "Total",
-        #     all_of(c(orig_top_names, host_top_names)),
-        #     "Others"
-        #   )
-      }
-    }
-    
-    output$range <- ranger(gdidata::unhcr)
-  }
+  # if (key == "refug") {
+  #   
+  #   panel_orig <- paste0(
+  #     "Refugees from ", name, " and where they are hosted"
+  #   )
+  #   panel_host <- paste0(
+  #     "Refugees hosted in ", name, " and where they come from"
+  #   )
+  #   
+  #   years <- c(seq(1990, 2020, 5), 2021:max(gdidata::unhcr$t))
+  #   
+  #   dataset <- gdidata::unhcr |>
+  #     filter(
+  #       (.data$t %in% years | .data$t == max(.data$t)),
+  #       .data$group == "refugee"
+  #     )
+  #   
+  #   # check <- filter(dataset, t == max(t), .by = geo) |>
+  #   #   group_by(geo) |>
+  #   #   arrange(desc(n), by_group = TRUE) |>
+  #   #   slice_head(n = 3) |>
+  #   #   ungroup()
+  #   
+  #   if (is.null(iso)) {
+  #     
+  #     output$data <- bind_rows(
+  #       dataset |> 
+  #         summarise(n = sum(n), .by = c(from, t)) |> 
+  #         rename(geo = from) |> 
+  #         mutate(panel = "orig"),
+  #       dataset |> 
+  #         summarise(n = sum(n), .by = c(geo, t)) |> 
+  #         mutate(panel = "host")
+  #     )
+  #     
+  #   } else {
+  #     
+  #     orig <- filter(dataset, .data$from == iso)
+  #     
+  #     if (nrow(orig) > 0) {
+  #       
+  #       orig_top_t1 <- filter(orig, .data$t == max(t)) |>
+  #         arrange(desc(.data$n)) |>
+  #         slice_head(n = 3)
+  #       orig_top_names <- gdidata::countryname(orig_top_t1$geo, to = "name_text")
+  #       orig <- orig |>
+  #         mutate(
+  #           nat = ifelse(.data$geo %in% orig_top_t1$geo, .data$geo, "Others"),
+  #           nat_name = ifelse(
+  #             .data$nat == "Others",
+  #             .data$nat, 
+  #             countryname(.data$nat, to = "name_text") |> suppressWarnings()
+  #           )
+  #         ) |>
+  #         summarise(
+  #           n = sum(.data$n), 
+  #           .by = c(.data$nat, .data$nat_name, .data$t)
+  #         ) |>
+  #         mutate(panel = "orig") |>
+  #         complete(
+  #           t = years,
+  #           tidyr::nesting(nat, nat_name, panel),
+  #           fill = list(n = 0)
+  #         )
+  #       
+  #     } else orig_top_names <- ""
+  # 
+  #     host <- filter(dataset, .data$geo == iso)
+  #     
+  #     if (nrow(host) > 0) {
+  # 
+  #       host_without_unknown <- filter(host, .data$from != "OOO")
+  #       host_top_t1 <- filter(host_without_unknown, .data$t == max(t)) |>
+  #         arrange(desc(.data$n)) |>
+  #         slice_head(n = 3)
+  #       host_top_names <- gdidata::countryname(host_top_t1$from, to = "name_text")
+  #       host <- host |>
+  #         mutate(
+  #           nat = case_when(
+  #             .data$from %in% c(host_top_t1$from, "OOO") ~ .data$from, 
+  #             .default = "Others"
+  #           ),
+  #           nat_name = ifelse(
+  #             .data$nat == "Others",
+  #             .data$nat, 
+  #             countryname(.data$nat, to = "name_text") |> suppressWarnings()
+  #           )
+  #         ) |>
+  #         summarise(
+  #           n = sum(.data$n), 
+  #           .by = c(.data$nat, .data$nat_name, .data$t)
+  #         ) |>
+  #         mutate(panel = "host") |>
+  #         complete(
+  #           t = years,
+  #           tidyr::nesting(nat, nat_name, panel),
+  #           fill = list(n = 0)
+  #         )
+  #     } else {
+  #       host <- host |> rename(nat = from)
+  #       host_top_names <- NULL
+  #     }
+  #       
+  #     output$data <- bind_rows(orig, host)
+  #     
+  #     if (nrow(output$data) > 0) {
+  #       
+  #       output$data <- output$data |>
+  #         mutate(nat_name = factor(.data$nat_name, levels = c(
+  #           unique(c(orig_top_names, host_top_names)),
+  #           "Unknown", "Others"
+  #         )))
+  #       
+  #       agg <- output$data |>
+  #         summarise(n = sum(.data$n), .by = c(.data$t, .data$panel)) |>
+  #         mutate(nat_name = "Total")
+  #       
+  #       # output$print <- bind_rows(agg, output$data) |>
+  #       #   mutate(Panel = ifelse(.data$panel == "orig", panel_orig, panel_host)) |>
+  #       #   select(.data$Panel, .data$nat_name, Year = .data$t, .data$n) |>
+  #       #   arrange(.data$Panel,.data$Year) |>
+  #       #   pivot_wider(names_from = .data$nat_name, values_from = .data$n) |>
+  #       #   select(
+  #       #     "Panel", "Year", "Total",
+  #       #     all_of(c(orig_top_names, host_top_names)),
+  #       #     "Others"
+  #       #   )
+  #     }
+  #   }
+  #   
+  #   output$range <- ranger(gdidata::unhcr)
+  # }
   
   
   # Remittances -------------------------------------------------------------
   
-  if (key == "remt") {
-    
-    remt <- filter(gdidata::wdi, .data$var %in% c("remin", "remout"))
-    output$data <- filter(remt, .data$geo == iso & .data$v > 0) |>
-      rename(n = .data$v)
-    
-    if (nrow(output$data) > 0) {
-      
-      vars <- c("Remittances received", "Remittances paid")
-      
-      output$print <- output$data |>
-        mutate(
-          Country = gdidata::countryname(iso, to = "name_text"),
-          var = ifelse(.data$var == "remin", vars[1], vars[2])
-        ) |>
-        select(.data$Country, Year = .data$t, .data$var, .data$n) |>
-        complete(
-          .data$Country,
-          .data$Year,
-          var = vars,
-          fill = list(n = NA)
-        ) |>
-        pivot_wider(names_from = .data$var, values_from = .data$n) |>
-        arrange(.data$Year)
-    }
-    
-    output$range <- ranger(remt)
-  }
+  # if (key == "remt") {
+  #   
+  #   remt <- filter(gdidata::wdi, .data$var %in% c("remin", "remout"))
+  #   output$data <- filter(remt, .data$geo == iso & .data$v > 0) |>
+  #     rename(n = .data$v)
+  #   
+  #   if (nrow(output$data) > 0) {
+  #     
+  #     vars <- c("Remittances received", "Remittances paid")
+  #     
+  #     output$print <- output$data |>
+  #       mutate(
+  #         Country = gdidata::countryname(iso, to = "name_text"),
+  #         var = ifelse(.data$var == "remin", vars[1], vars[2])
+  #       ) |>
+  #       select(.data$Country, Year = .data$t, .data$var, .data$n) |>
+  #       complete(
+  #         .data$Country,
+  #         .data$Year,
+  #         var = vars,
+  #         fill = list(n = NA)
+  #       ) |>
+  #       pivot_wider(names_from = .data$var, values_from = .data$n) |>
+  #       arrange(.data$Year)
+  #   }
+  #   
+  #   output$range <- ranger(remt)
+  # }
   
   
   # FDI ---------------------------------------------------------------------
 
-  if (key == "fdi") {
-    
-    fdi <- filter(gdidata::wdi, .data$var %in% c("fdiin", "fdiout"))
-    output$data <- filter(fdi, .data$geo == iso & .data$v > 0) |>
-      rename(n = .data$v)
-    
-    if (nrow(output$data) > 0) {
-      
-      vars <- c("FDI inflow", "FDI outflow")
-      
-      output$print <- output$data |>
-        mutate(
-          Country = gdidata::countryname(iso, to = "name_text"),
-          var = ifelse(.data$var == "fdiin", vars[1], vars[2])
-        ) |>
-        select(.data$Country, Year = .data$t, .data$var, .data$n) |>
-        complete(
-          .data$Country,
-          .data$Year,
-          var = vars,
-          fill = list(n = NA)
-        ) |>
-        pivot_wider(names_from = .data$var, values_from = .data$n) |>
-        arrange(.data$Year)
-    }
-    
-    output$range <- ranger(fdi)
-  }
+  # if (key == "fdi") {
+  #   
+  #   fdi <- filter(gdidata::wdi, .data$var %in% c("fdiin", "fdiout"))
+  #   output$data <- filter(fdi, .data$geo == iso & .data$v > 0) |>
+  #     rename(n = .data$v)
+  #   
+  #   if (nrow(output$data) > 0) {
+  #     
+  #     vars <- c("FDI inflow", "FDI outflow")
+  #     
+  #     output$print <- output$data |>
+  #       mutate(
+  #         Country = gdidata::countryname(iso, to = "name_text"),
+  #         var = ifelse(.data$var == "fdiin", vars[1], vars[2])
+  #       ) |>
+  #       select(.data$Country, Year = .data$t, .data$var, .data$n) |>
+  #       complete(
+  #         .data$Country,
+  #         .data$Year,
+  #         var = vars,
+  #         fill = list(n = NA)
+  #       ) |>
+  #       pivot_wider(names_from = .data$var, values_from = .data$n) |>
+  #       arrange(.data$Year)
+  #   }
+  #   
+  #   output$range <- ranger(fdi)
+  # }
   
 
   # Sex and age pyramid -----------------------------------------------------

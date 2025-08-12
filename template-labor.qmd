@@ -1,7 +1,7 @@
 ---
-title: "Germany"
-output-file: "germany"
-iso: "DEU"
+title: "Italy"
+output-file: "Italy"
+iso: "ITA"
 execute:
   echo: false
   warning: false
@@ -14,6 +14,7 @@ format:
 devtools::load_all(".")
 knitr::opts_chunk$set(dev = "svglite")
 code <- rmarkdown::metadata$iso
+name <- namer(code)
 i <- 1
 j <- 0
 ```
@@ -42,14 +43,14 @@ i <- i + 1
 
 ```{r}
 #| fig-width: 6.7
-#| fig-height: 2.5
+#| fig-height: 2.75
 #| message: false
 
 cowplot::plot_grid(
   snap_plot("immpyr", code, basesize = basesize, font = font) |>
-    plot_label(i, h = .15 / 2.5),
+    plot_label(i, h = .15 / 2.75),
   snap_plot("immdep", code, basesize = basesize, font = font) |>
-    plot_label(i + 1, h = .15 / 2.5)
+    plot_label(i + 1, h = .15 / 2.75)
 )
 i <- i + 2
 ```
@@ -69,205 +70,190 @@ i <- i + 2
 
 ```{r}
 #| fig-width: 6.7
-#| fig-height: 2.5
+#| fig-height: 2.4
 #| message: false
 
 cowplot::plot_grid(
   snap_plot("emp", code, basesize = basesize, font = font) |>
-    plot_label(i, h = .15 / 2.5),
+    plot_label(i, h = .15 / 2.4),
   snap_plot("empeduc", code, basesize = basesize, font = font) |>
-    plot_label(i + 1, h = .15 / 2.5)
+    plot_label(i + 1, h = .15 / 2.4)
 )
 i <- i + 2
 ```
 
-<!-- ```{=typst} -->
-<!-- #caption[`r caption_migpyr(code)`] -->
-<!-- ``` -->
+```{=typst}
+#caption[
+`r caption_unemrate(code)`
+#colbreak()
+`r caption_unemeduc(code)`
+]
+```
 
-<!-- ```{r} -->
-<!-- #| fig-width: 6.7 -->
-<!-- #| fig-height: 2.50 -->
-<!-- #| message: false -->
+```{r}
+#| fig-width: 6.7
+#| fig-height: 2.4
+#| message: false
 
-<!-- snap_plot("migpyr", code, basesize = basesize, font = font) |>  -->
-<!--   plot_label(i, span = 1, h = .15 / 2.50) -->
-<!-- i <- i + 1 -->
-<!-- ``` -->
+cowplot::plot_grid(
+  snap_plot("unemrate", code, basesize = basesize, font = font) |>
+    plot_label(i, h = .15 / 2.4),
+  snap_plot("unemeduc", code, basesize = basesize, font = font) |>
+    plot_label(i + 1, h = .15 / 2.4)
+)
+i <- i + 2
+```
 
-<!-- ```{=typst} -->
-<!-- #caption[`r caption_nmig(code)`] -->
-<!-- ``` -->
+```{=typst}
+#caption[
+`r caption_earnings(code)`
+#colbreak()
+`r caption_hours(code)`
+]
+```
 
-<!-- ```{r} -->
-<!-- #| fig-width: 6.7 -->
-<!-- #| fig-height: 2.50 -->
-<!-- #| message: false -->
+```{r}
+#| fig-width: 6.7
+#| fig-height: 2.4
+#| message: false
 
-<!-- cowplot::plot_grid( -->
-<!--   snap_plot("nmig", code, basesize = basesize, font = font) |>  -->
-<!--     plot_label(i, h = .15 / 2.50), -->
-<!--   plot_nmigmap(code, basesize = basesize, font = font) |>  -->
-<!--     plot_label(i + 1, h = .15 / 2.50) -->
-<!-- ) -->
-<!-- i <- i + 2 -->
-<!-- ``` -->
+cowplot::plot_grid(
+  snap_plot("earnings", code, basesize = basesize, font = font) |>
+    plot_label(i, h = .15 / 2.4),
+  snap_plot("hours", code, basesize = basesize, font = font) |>
+    plot_label(i + 1, h = .15 / 2.4)
+)
+i <- i + 2
+```
 
-<!-- ```{=typst} -->
-<!-- `r caption_idp(code)` -->
-<!-- ``` -->
+```{=typst}
+///////////////////////////////////////////////// PAGE 3 ⬇️
+#pagebreak()
+```
 
-<!-- ```{r} -->
-<!-- #| fig-width: 6.7 -->
-<!-- #| fig-height: 2.25 -->
-<!-- #| message: false -->
+```{=typst}
+`r caption_empsector(code)`
+```
 
-<!-- snap_plot("idp", code, basesize = basesize, font = font) |>  -->
-<!--   plot_label(i, span = 1, h = .15 / 2.25) -->
-<!-- i <- i + 1 -->
-<!-- ``` -->
+```{r}
+#| fig-width: 6.7
+#| fig-height: 3.0
+#| message: false
 
-<!-- ```{=typst} -->
-<!-- ///////////////////////////////////////////////////////////////////// PAGE 3 ⬇️ -->
-<!-- #pagebreak() -->
-<!-- ``` -->
+snap_plot("empsector", code, basesize = basesize, font = font) |>
+  plot_label(i, span = 1, h = .15 / 3.0)
 
-<!-- ```{r} -->
-<!-- #| fig-width: 6.7 -->
-<!-- #| fig-height: 2.75 -->
-<!-- #| message: false -->
+i <- i + 1
+```
 
-<!-- cowplot::plot_grid( -->
-<!--   snap_plot("idpmap", code, basesize = basesize, font = font) |>  -->
-<!--     plot_label(i, h = .15 / 2.75), -->
-<!--   snap_plot("idcause", code, basesize = basesize, font = font) |>  -->
-<!--     plot_label(i + 1, h = .15 / 2.75) -->
-<!-- ) -->
-<!-- i <- i + 2 -->
-<!-- ``` -->
+```{=typst}
+#caption[
+`r caption_gva(code)`
+#colbreak()
+`r caption_exports(code)`
+]
+```
 
-<!-- ```{=typst} -->
-<!-- #caption[`r caption_mmp(code)`] -->
-<!-- ``` -->
+```{r}
+#| fig-width: 6.7
+#| fig-height: 2.35
+#| message: false
 
-<!-- ```{r} -->
-<!-- #| fig-width: 6.7 -->
-<!-- #| fig-height: 2.50 -->
-<!-- #| message: false -->
+cowplot::plot_grid(
+  snap_plot("gva", code, basesize = basesize, font = font) |>
+    plot_label(i, h = .15 / 2.35),
+  snap_plot("exports", code, basesize = basesize, font = font) |>
+    plot_label(i + 1, h = .15 / 2.35)
+)
+i <- i + 2
+```
 
-<!-- cowplot::plot_grid( -->
-<!--   snap_plot("mmp", code, basesize = basesize, font = font) |>  -->
-<!--     plot_label(i, h = .15 / 2.50), -->
-<!--   snap_plot("mmpmap", code, basesize = basesize, font = font) |>  -->
-<!--     plot_label(i + 1, h = .15 / 2.50) -->
-<!-- ) -->
-<!-- i <- i + 2 -->
-<!-- ``` -->
+```{=typst}
+#caption[
+`r caption_empoccup(code)`
+#colbreak()
+`r caption_unemoccup(code)`
+]
+```
 
-<!-- ```{=typst} -->
-<!-- #caption[ -->
-<!-- `r caption_refug_orig(code)` -->
-<!-- #colbreak() -->
-<!-- `r caption_refug_host(code)` -->
-<!-- ] -->
-<!-- ``` -->
+```{r}
+#| fig-width: 6.7
+#| fig-height: 2.35
+#| message: false
 
-<!-- ```{r} -->
-<!-- #| fig-width: 6.7 -->
-<!-- #| fig-height: 2.75 -->
-<!-- #| message: false -->
+cowplot::plot_grid(
+  snap_plot("empoccup", code, basesize = basesize, font = font) |>
+    plot_label(i, h = .15 / 2.35),
+  snap_plot("unemoccup", code, basesize = basesize, font = font) |>
+    plot_label(i + 1, h = .15 / 2.35)
+)
+i <- i + 2
+```
 
-<!-- snap_plot("refug", code, basesize = basesize, font = font) |>  -->
-<!--   plot_label(i, span = 1, h = .15 / 2.75) -->
-<!-- i <- i + 1 -->
-<!-- ``` -->
+```{=typst}
+///////////////////////////////////////////////// PAGE 4 ⬇️
+#pagebreak()
+```
 
-<!-- ```{=typst} -->
-<!-- ///////////////////////////////////////////////////////////////////// PAGE 4 ⬇️ -->
-<!-- #pagebreak() -->
-<!-- ``` -->
+```{=typst}
+`r caption_empskill(code)`
+```
 
-<!-- ```{=typst} -->
-<!-- #caption[ -->
-<!-- `r caption_remin(code)` -->
-<!-- `r caption_remout(code)` -->
-<!-- #colbreak() -->
-<!-- `r caption_fdiin(code)` -->
-<!-- `r caption_fdiout(code)` -->
-<!-- ] -->
-<!-- ``` -->
+```{r}
+#| fig-width: 6.7
+#| fig-height: 2.0
+#| message: false
 
-<!-- ```{r} -->
-<!-- #| fig-width: 6.7 -->
-<!-- #| fig-height: 2.25 -->
-<!-- #| message: false -->
+snap_plot("empskill", code, basesize = basesize, font = font) |>
+  plot_label(i, span = 1, h = .15 / 2.0)
 
-<!-- cowplot::plot_grid( -->
-<!--   snap_plot("remt", code, basesize = basesize, font = font) |>  -->
-<!--     plot_label(i, h = .15 / 2.25), -->
-<!--   snap_plot("fdi", code, basesize = basesize, font = font) |>  -->
-<!--     plot_label(i + 1, h = .15 / 2.25) -->
-<!-- ) -->
-<!-- i <- i + 2 -->
-<!-- ``` -->
+i <- i + 1
+```
 
-<!-- ```{=typst} -->
-<!-- #header( -->
-<!--   name: "II. Demographics and Economy", -->
-<!--   note: "Data in this section refer to the general population of `r gdidata::countryname(rmarkdown::metadata$iso, to = 'name_text')` (i.e., migrant and non-migrant population)." -->
-<!-- ) -->
-<!-- ``` -->
+```{r}
+#| fig-width: 6.7
+#| fig-height: .25
+#| message: false
 
-<!-- ```{=typst} -->
-<!-- #caption(ncol: 3)[ -->
-<!-- `r caption_pop(code)` -->
-<!-- #colbreak() -->
-<!-- `r caption_birth(code)` -->
-<!-- #colbreak() -->
-<!-- `r caption_depend(code)` -->
-<!-- ] -->
-<!-- ``` -->
+year <- snap_data("empcountry", code)$range[1]
+title <- str_glue(
+  "Sectoral employment in {name}, ",
+  "in migrant origin countries, and in countries worldwide, {year}"
+)
+if (is.null(year)) {
+  title <- str_glue(
+    "Sectoral employment in {name}, ",
+    "in migrant origin countries, and in countries worldwide"
+  )
+}
 
-<!-- ```{r} -->
-<!-- #| fig-width: 6.7 -->
-<!-- #| fig-height: 2.18 -->
-<!-- #| message: false -->
+plot_title <- ggplot() + 
+  ggtitle(title) + 
+  apply_theme("bar-vertical", basesize = basesize, font = font)
 
-<!-- cowplot::plot_grid( -->
-<!--   snap_plot("pop", code, basesize = basesize, font = font) |>  -->
-<!--     plot_label(i, span = 3, h = .15 / 2.18), -->
-<!--   snap_plot("birth", code, basesize = basesize, font = font) |>  -->
-<!--     plot_label(i + 1, span = 3, h = .15 / 2.18), -->
-<!--   snap_plot("depend", code, basesize = basesize, font = font) |>  -->
-<!--     plot_label(i + 2, span = 3, h = .15 / 2.18), -->
-<!--   nrow = 1 -->
-<!-- ) -->
-<!-- i <- i + 3 -->
-<!-- ``` -->
+plot_title |> plot_label(i, span = 1, h = .15 / .25)
+```
 
-<!-- ```{=typst} -->
-<!-- #caption(ncol: 3)[ -->
-<!-- `r caption_income(code)` -->
-<!-- #colbreak() -->
-<!-- `r caption_unem(code)` -->
-<!-- #colbreak() -->
-<!-- `r caption_inf(code)` -->
-<!-- ] -->
-<!-- ``` -->
+```{=typst}
+`r caption_empcountry(code, row = 1)`
+```
 
-<!-- ```{r} -->
-<!-- #| fig-width: 6.7 -->
-<!-- #| fig-height: 2.18 -->
-<!-- #| message: false -->
+```{r}
+#| fig-width: 6.7
+#| fig-height: 1.75
+#| message: false
 
-<!-- cowplot::plot_grid( -->
-<!--   snap_plot("income", code, basesize = basesize, font = font) |>  -->
-<!--     plot_label(i, span = 3, h = .15 / 2.18), -->
-<!--   snap_plot("unem", code, basesize = basesize, font = font) |>  -->
-<!--     plot_label(i + 1, span = 3, h = .15 / 2.18), -->
-<!--   snap_plot("inf", code, basesize = basesize, font = font) |>  -->
-<!--     plot_label(i + 2, span = 3, h = .15 / 2.18), -->
-<!--   nrow = 1 -->
-<!-- ) -->
-<!-- i <- i + 3 -->
-<!-- ``` -->
+snap_plot("empcountry", code, basesize = basesize, font = font, row = 1)
+```
+
+```{=typst}
+`r caption_empcountry(code, row = 2)`
+```
+
+```{r}
+#| fig-width: 6.7
+#| fig-height: 2.0
+#| message: false
+
+snap_plot("empcountry", code, basesize = basesize, font = font, row = 2)
+```

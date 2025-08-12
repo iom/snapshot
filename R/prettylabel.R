@@ -54,7 +54,8 @@ prettylabel <- function(N,
     suffixes <- list(
       pc = " per cent",
       mn = " million",
-      bn = " billion"
+      bn = " billion",
+      tn = " trillion"
     )
 
   } else {
@@ -63,7 +64,8 @@ prettylabel <- function(N,
       pc = "%",
       th = "K",
       mn = "M",
-      bn = "B"
+      bn = " B",
+      tn = " T"
     )
   }
 
@@ -114,6 +116,11 @@ prettylabel <- function(N,
         label$number <- fmt(n)
         label$suffix <- suffixes$bn
         
+      } else {
+        
+        n <- n / 10^12
+        label$number <- fmt(n)
+        label$suffix <- suffixes$tn
       }
       
       labels <- c(labels, paste0(label$prefix, label$number, label$suffix))

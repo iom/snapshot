@@ -3,6 +3,13 @@
 
 basesize <- 7
 font <- "Gill Sans Nova"
+label_size <- 1
+legend_spacing <- .05
+legend_nrow <- 3
+
+interval <- "years"
+end <- NULL
+years <- 7
 
 
 # Chart helpers -----------------------------------------------------------
@@ -35,31 +42,58 @@ idmc_iom <- c(
   "ZMB"
 )
 
-namer <- function(iso, bold = FALSE) {
+gva_sectors <- c(
+  "Agriculture, hunting, forestry, fishing",
+  "Mining, Manufacturing, Utilities",
+  "Construction",
+  "Manufacturing",
+  "Wholesale, retail trade, restaurants and hotels",
+  "Transport, storage and communication",
+  "Other Activities"
+)
+
+exports_sectors <- c(
+  "Agriculture, Hunting, Forestry and Fishing",
+  "Mining and Quarrying",
+  "Manufacturing",
+  "Electricity, Gas and Water",
+  "Community, Social and Personal Services"
+)
+
+namer <- function(iso, bold = FALSE, lang = "en") {
   
   if (is.null(iso)) {
     
     return(NULL)
     
   } else {
-  
+    
     name_iso <- filter(gdidata::countrynames, iso3 == iso)
+    
     if (iso == "XKX") {
       name_iso$with_the <- 0
       name_iso$name_text <- "Kosovo"
     }
     
-    if (bold) {
+    if (lang == "en") {
       
-      if (name_iso$with_the == 1) {
-        name <- paste0("the ", "#b[", name_iso$name_text, "]")
+      if (bold) {
+        
+        if (name_iso$with_the == 1) {
+          name <- paste0("the ", "#b[", name_iso$name_text, "]")
+        }
+        else name <- paste0("#b[", name_iso$name_text, "]")
+        
+      } else {
+        
+        if (name_iso$with_the == 1) name <- paste0("the ", name_iso$name_text)
+        else name <- name_iso$name_text
       }
-      else name <- paste0("#b[", name_iso$name_text, "]")
-      
-    } else {
-      
-      if (name_iso$with_the == 1) name <- paste0("the ", name_iso$name_text)
-      else name <- name_iso$name_text
+    }
+    
+    if (lang == "pt") {
+      if (bold) name <- paste0("#b[", name_iso$name_pt, "]")
+      else name <- name_iso$name_pt
     }
   }
   
@@ -88,7 +122,43 @@ break_lines <- function(column) {
     "Occupied Palestinian Territory" =
       "Occupied Palestinian\nTerritory",
     "Bolivarian Republic of Venezuela" =
-      "Bolivarian Republic\nof Venezuela"
+      "Bolivarian Republic\nof Venezuela",
+    
+    "Wholesale and retail trade" = 
+      "Wholesale and\nretail trade",
+    "Accommodation and food services" = 
+      "Accommodation\nand food services",
+    "Information and communication" = 
+      "Information and\ncommunication",
+    "Professional activities" = 
+      "Professional\nactivities",
+    "Administrative activities" = 
+      "Administrative\nactivities",
+    "Public administration" = 
+      "Public\nadministration",
+    "Arts and recreation" = 
+      "Arts and\nrecreation",
+    "Miscellaneous sectors" = 
+      "Miscellaneous\nsectors",
+    
+    
+    "Agriculture, hunting, forestry, fishing" = 
+      "Agriculture,\nhunting, forestry,\nfishing",
+    "Mining, Manufacturing, Utilities" = 
+      "Mining,\nManufacturing,\nUtilities",
+    "Wholesale, retail trade, restaurants and hotels" =
+      "Wholesale, retail\ntrade, restaurants\nand hotels",
+    "Transport, storage and communication" = 
+      "Transport,\nstorage and\ncommunication",
+    
+    "Agriculture, Hunting, Forestry and Fishing" =
+      "Agriculture,\nHunting, Forestry\nand Fishing",
+    "Mining and Quarrying" =
+      "Mining and\nQuarrying",
+    "Electricity, Gas and Water" =
+      "Electricity, Gas\nand Water",
+    "Community, Social and Personal Services" =
+      "Community, Social\nand Personal\nServices"
   )
 
   indices <- which(column %in% names(dict))
@@ -102,20 +172,36 @@ break_lines <- function(column) {
   return(new_col)
 }
 
-set_axis <- function(values, units = "Persons") {
+set_axis <- function(values, units = "Person", lang = "en") {
 
   max_n <- max(values, na.rm = TRUE)
 
+  if (lang == "en") {
+    preposition <- "of"
+    thousands <- "Thousands"
+    millions <- "Millions"
+    billions <- "Billions"
+    trillions <- "Trillions"
+  }
+  
+  if (lang == "pt") {
+    preposition <- "de"
+    thousands <- "Milhares"
+    millions <- "Milhões"
+    billions <- "Bilhões"
+    trillions <- "Trilhões"
+  }
+  
   write_title <- function(scale, units) {
-    if (units == "USD") text <- paste0(scale, " ", units)
-    else text <- paste0(scale, " of ", tolower(units))
+    if (units == "US$") text <- paste0(scale, " ", units)
+    else text <- paste(scale, preposition, tolower(units))
     return(text)
   }
-
+  
   output <- list(
     breaks = waiver(),
     labels = function(x) x / 10^6,
-    title = write_title("Millions", units)
+    title = write_title(millions, units)
   )
 
   if (max_n < 12) {
@@ -128,7 +214,7 @@ set_axis <- function(values, units = "Persons") {
     output$labels <- waiver()
   }
   if (max_n >= 1200 & max_n < 1.20 * 10^6) {
-    output$title <- write_title("Thousands", units)
+    output$title <- write_title(thousands, units)
     output$labels <- function(x) x / 1000
   }
   if (max_n >= 1.20 * 10^6 & max_n < 1.40 * 10^6) {
@@ -141,21 +227,45 @@ set_axis <- function(values, units = "Persons") {
   }
 
   if (max_n >= 1.20 * 10^9 & max_n < 1.40 * 10^9) {
-    output$title <- write_title("Billions", units)
+    output$title <- write_title(billions, units)
     output$breaks <- seq(0, 1.50 * 10^9, .25 * 10^9)
     output$labels <- c("0", "0.25", "0.50", "0.75", "1.00", "1.25", "1.50")
   }
   if (max_n >= 1.40 * 10^9 & max_n < 1.80 * 10^9) {
-    output$title <- write_title("Billions", units)
+    output$title <- write_title(billions, units)
     output$breaks <- seq(0, 1.50 * 10^9, .50 * 10^9)
     output$labels <- c("0", "0.5", "1.0", "1.5")
   }
   if (max_n >= 1.80 * 10^9) {
-    output$title <- write_title("Billions", units)
+    output$title <- write_title(billions, units)
     output$labels <- function(x) x / 10^9
   }
 
   return(output)
+}
+
+get_legend <- function(plot, legend = NULL) {
+  
+  gt <- ggplotGrob(plot)
+  
+  pattern <- "guide-box"
+  if (!is.null(legend)) {
+    pattern <- paste0(pattern, "-", legend)
+  }
+  
+  indices <- grep(pattern, gt$layout$name)
+  
+  not_empty <- !vapply(
+    gt$grobs[indices], 
+    inherits, what = "zeroGrob", 
+    FUN.VALUE = logical(1)
+  )
+  indices <- indices[not_empty]
+  
+  if (length(indices) > 0) {
+    return(gt$grobs[[indices[1]]])
+  }
+  return(NULL)
 }
 
 plot_label <- function(plot, label, span = 2, h = .06) {
