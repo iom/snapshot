@@ -3,6 +3,7 @@ generated
 testing*
 scripts.R
 test-plots
+documents
 data-raw
 
 # Ignore RStudio project files
