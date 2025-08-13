@@ -21,5 +21,5 @@ snap_plot(key, iso = NULL, basesize = 7, font = "Open Sans", ...)
 \code{ggplot2} object or a list of metadata.
 }
 \description{
-If \code{iso=NULL}, function returns \code{key} plot's metadata.
+Generate a preset plot
 }

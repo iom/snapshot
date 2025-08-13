@@ -6,7 +6,7 @@ execute:
   echo: false
   warning: false
 format:
-  gdi-country-snapshot-typst: default
+  snapshot-typst: default
 ---
 
 ```{r}

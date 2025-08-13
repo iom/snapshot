@@ -162,9 +162,9 @@ caption_stocks_emig <- function(iso) {
   name <- namer(iso)
   region <- filter(gdidata::countrynames, iso3 == iso)$iom_region
   
-  data <- plot_data("stocks", use_2020 = TRUE)$data |> 
+  data <- snap_data("stocks", use_2020 = TRUE)$data |> 
     filter(panel == "emig")
-  data_iso <- plot_data("stocks", iso = iso, use_2020 = TRUE)$data |> 
+  data_iso <- snap_data("stocks", iso = iso, use_2020 = TRUE)$data |> 
     filter(panel == "emig")
   
   t0 <- min(data_iso$t)
@@ -245,9 +245,9 @@ caption_stocks_immig <- function(iso) {
   
   name <- namer(iso)
   region <- filter(gdidata::countrynames, iso3 == iso)$iom_region
-  data <- plot_data("stocks", use_2020 = TRUE)$data |> 
+  data <- snap_data("stocks", use_2020 = TRUE)$data |> 
     filter(panel == "immig")
-  data_iso <- plot_data("stocks", iso = iso, use_2020 = TRUE)$data |> 
+  data_iso <- snap_data("stocks", iso = iso, use_2020 = TRUE)$data |> 
     filter(panel == "immig", n > 0)
   
   t0 <- min(data_iso$t)
@@ -339,8 +339,8 @@ caption_nmig <- function(iso) {
   
   name <- namer(iso)
   
-  data <- plot_data("nmig")$data
-  data_iso <- plot_data("nmig", iso)$data
+  data <- snap_data("nmig")$data
+  data_iso <- snap_data("nmig", iso)$data
   
   map <- paste(
     "In the map below, net migration is expressed relative to the local",
@@ -350,7 +350,7 @@ caption_nmig <- function(iso) {
     "does not necessarily signify the aggregate level of net migration."
   )
   
-  if (nrow(drop_na(data_iso, .data$n)) == 0) {
+  if (nrow(drop_na(data_iso, n)) == 0) {
     
     caption <- str_glue(paste(
       "The World Bank has no information on net migration for {name}.",
@@ -577,13 +577,13 @@ caption_refug_orig <- function(iso) {
     
     # Top host countries
     
-    host_iso <- plot_data("refug", iso)$data |> 
-      filter(.data$panel == "orig", .data$t == t1) |> 
-      mutate(v = 100 * .data$n / sum(.data$n)) |> 
-      arrange(desc(.data$n))
+    host_iso <- snap_data("refug", iso)$data |> 
+      filter(panel == "orig", t == t1) |> 
+      mutate(v = 100 * n / sum(n)) |> 
+      arrange(desc(n))
     
-    hosts <- filter(host_iso, .data$nat != "Others")
-    others <- filter(host_iso, .data$nat == "Others")
+    hosts <- filter(host_iso, nat != "Others")
+    others <- filter(host_iso, nat == "Others")
     
     if (nrow(hosts) == 0) {
       hosts_text <- ""
@@ -701,14 +701,14 @@ caption_refug_host <- function(iso) {
     
     # Top origin countries
     
-    orig_iso <- plot_data("refug", iso)$data |> 
-      filter(.data$panel == "host", .data$t == t1) |> 
-      mutate(v = 100 * .data$n / sum(.data$n)) |> 
-      arrange(desc(.data$n))
+    orig_iso <- snap_data("refug", iso)$data |> 
+      filter(panel == "host", t == t1) |> 
+      mutate(v = 100 * n / sum(n)) |> 
+      arrange(desc(n))
     
-    origs <- filter(orig_iso, !(.data$nat %in% c("OOO", "Others")))
-    unknowns <- filter(orig_iso, .data$nat == "Unknowns")
-    others <- filter(orig_iso, .data$nat == "Others")
+    origs <- filter(orig_iso, !(nat %in% c("OOO", "Others")))
+    unknowns <- filter(orig_iso, nat == "Unknowns")
+    others <- filter(orig_iso, nat == "Others")
     
     if (nrow(origs) == 0) {
       origs_text <- str_glue(
@@ -920,7 +920,7 @@ caption_mmp <- function(iso) {
   data_iso <- filter(data, geo == iso)
   
   t0 <- min(gdidata::iom_mmp$t, na.rm = TRUE) |> year()
-  t1 <- max(gdidata::iom_mmp$t, na.rm = TRUE) |> year()
+  t1 <- max(gdidata::wdi$t)
   
   if (nrow(data_iso) == 0) {
     
@@ -934,7 +934,9 @@ caption_mmp <- function(iso) {
     
   } else {
     
-    data_iso_cause <- filter(gdidata::iom_mmp, geo == iso) |> 
+    data_iso_cause <- gdidata::iom_mmp |> 
+      filter(geo == iso) |> 
+      filter(year(t) <= t1) |> 
       summarise(n = sum(dead), .by = cause) |> 
       arrange(desc(n)) |> 
       mutate(

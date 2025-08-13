@@ -36,26 +36,40 @@ plot_empty <- function(title,
 plot_nmig <- function(hero,
                       basesize,
                       font,
-                      title = paste0(
-                        "Net migration, ",
-                        plot_data("nmig", hero)$range |>
-                          paste(collapse = "\u2013")
-                      )) {
+                      title = NULL,
+                      lang = "en") {
   
   k <- function(factor = 1) factor * basesize / .pt
-  source <- "Source: World Bank."
-  t0 <- plot_data("nmig",)$range[1]
-  t1 <- plot_data("nmig")$range[2]
-  data <- plot_data("nmig", hero)$data
+  
+  if (lang == "en") {
+    if (is.null(title)) title <- "Net migration"
+    source <- "Source: World Bank."
+    persons <- "Persons"
+  }
+  
+  if (lang == "pt") {
+    if (is.null(title)) title <- "Migração líquid"
+    source <- "Fonte: Banco Mundial."
+    persons <- "Pessoas"
+  }
+  
+  t0 <- snap_data("nmig",)$range[1]
+  t1 <- snap_data("nmig")$range[2]
+  data <- snap_data("nmig", hero)$data
   
   if (nrow(data) > 0) {
     
-    axis <- set_axis(data$n, "Persons")
+    plot_title <- paste0(
+      title, ", ",
+      snap_data("nmig", hero)$range |> paste(collapse = "\u2013")
+    )
+    
+    axis <- set_axis(data$n, persons, lang = lang)
     
     plot <- ggplot(data, aes(x = t, y = n)) +
       geom_bar(stat = "identity", width = .7, fill = pal("blues", 2)) +
       geom_hline(yintercept = 0, color = pal("blues"), linewidth = k(.1)) +
-      labs(title = title, caption = source) +
+      labs(title = plot_title, caption = source) +
       
       scale_x_continuous(
         breaks = seq(t0, t1, 10),
@@ -85,66 +99,312 @@ plot_nmig <- function(hero,
       )
     
   } else {
-    plot <- plot_empty(title, source, basesize, font)
+    plot <- plot_empty(title, source, basesize, font, msg = nodata)
   }
   
   return(plot)
 }
 
-plot_nmig_pt <- function(hero,
+plot_nmigmap <- function(hero,
                          basesize,
                          font,
-                         title = paste0(
-                           "Migração líquida, ",
-                           plot_data("nmig", hero)$range |>
-                             paste(collapse = "\u2013")
-                         )) {
+                         title = NULL,
+                         lang = "en") {
   
   k <- function(factor = 1) factor * basesize / .pt
-  source <- "Fonte: Banco Mundial."
-  t0 <- plot_data("nmig",)$range[1]
-  t1 <- plot_data("nmig")$range[2]
-  data <- plot_data("nmig", hero)$data
   
-  if (nrow(data) > 0) {
-    
-    axis <- set_axis(data$n, "Pessoas", lang = "pt")
-    
-    plot <- ggplot(data, aes(x = t, y = n)) +
-      geom_bar(stat = "identity", width = .7, fill = pal("blues", 2)) +
-      geom_hline(yintercept = 0, color = pal("blues"), linewidth = k(.1)) +
-      labs(title = title, caption = source) +
-      
-      scale_x_continuous(
-        breaks = seq(t0, t1, 10),
-        expand = expansion(mult = c(.03, .03)),
-        guide = guide_axis(minor.ticks = TRUE)
-      ) +
-      scale_y_continuous(
-        name = axis$title,
-        breaks = axis$breaks,
-        labels = axis$labels
-      ) +
-      guides(
-        color = guide_legend(nrow = 2),
-        linetype =  guide_legend(nrow = 2)
-      ) +
-      
-      apply_theme("bar-vertical", basesize = basesize, font = font) +
+  if (lang == "en") {
+    if (is.null(title)) title <- "Map of net migration per capita, average 2016\u20132020"
+    source <- "Source: Niva et al. (2023)."
+    legendtitle <- "Net migrants\nper 1000 people"
+  }
+  
+  if (lang == "pt") {
+    if (is.null(title)) title <- "Mapa da migração líquida per capita, média 2016\u20132020"
+    source <- "Fonte: Niva et al. (2023)."
+    legendtitle <- "Migrantes líquidos\npor 1000 pessoas"
+  }
+  
+  border_sub <- filter(admin1, adm0_a3 == hero) 
+  border <- border_sub |> sf::st_union()
+  
+  bbox <- sf::st_bbox(border)
+  border_spat <- sf::as_Spatial(border)
+  rast <- terra::crop(terra::mask(nmig_rast, border_spat), border_spat)
+  
+  lims <- list(
+    xlim = c(bbox$xmin, bbox$xmax),
+    ylim = c(bbox$ymin, bbox$ymax)
+  )
+  
+  # Manually set boundaries for countries that are smaller than 1 pixel
+  small <- c("AIA", "MCO", "NRU", "VAT", "VGB", "TUV")
+  if (hero == "AIA") {
+    bbox_manual <- raster::extent(-63.42882, -62.92568, 18.16909, 18.60126)
+    rast <- terra::crop(nmig_rast, bbox_manual)
+  }
+  if (hero == "CYM") {
+    bbox_manual <- raster::extent(-81.41654, -79.72664, 19.3, 19.6)
+    rast <- terra::crop(nmig_rast, bbox_manual)
+  }
+  if (hero == "MCO") {
+    bbox_manual <- raster::extent(7.375000, 7.458333, 43.70833, 43.79166)
+    rast <- terra::crop(nmig_rast, bbox_manual)
+  }
+  if (hero == "SGS") {
+    bbox_manual <- raster::extent(-38.05379, -36.0565, -54.9584, -53.95915)
+    rast <- terra::crop(nmig_rast, bbox_manual)
+  }
+  if (hero == "NRU") {
+    bbox_manual <- raster::extent(
+      166.9583, 166.9583 + 1/12, 
+      -0.5416667, -0.5416667 + 1/12
+    )
+    rast <- terra::crop(nmig_rast, bbox_manual)
+  }
+  if (hero == "VAT") {
+    bbox_manual <- raster::extent(12.37500, 12.45833, 41.87500, 41.95833)
+    rast <- terra::crop(nmig_rast, bbox_manual)
+  }
+  if (hero == "TUV") {
+    bbox_manual <- bbox
+    rast <- terra::crop(nmig_rast, bbox_manual)
+  }
+  
+  # Manually set plot area
+  if (hero == "CHL") {
+    lims <- list(
+      xlim = c(-76, -55.91850),
+      ylim = c(-66.42081, -17.50659)
+    )
+  }
+  
+  df <- terra::as.data.frame(rast, xy = TRUE, na.rm = TRUE)
+  
+  aspect <- (lims$ylim[2] - lims$ylim[1]) / (lims$xlim[2] - lims$xlim[1])
+  
+  # Background map
+  map_themes <- function() {
+    list(
+      apply_theme("map", basesize = basesize, font = font),
       theme(
-        axis.title.y = element_text(
-          size = basesize,
-          margin = margin(r = k(2))
+        legend.key.width = unit(1.25 * basesize, "points"),
+        legend.title = element_text(
+          size = basesize, 
+          hjust = .5,
+          margin = margin(l = k(3.5))
         ),
-        axis.ticks.x = element_line(
-          color = pal("blues"),
-          linewidth = k(.05)
-        ),
+        legend.title.position = "right",
+        legend.box.spacing = unit(k(.25), "lines"),
+        plot.margin = margin(0, 0, k(2), 0)
       )
+    )
+  }
+  
+  plot <- ggplot() + 
+    geom_sf(data = border, fill = pal("grays", 5), color = NA) +
+    map_themes()
+  
+  if (length(unique(df$v)) == 1) {
+    
+    v <- df$v[1]
+    set_labels <- prettylabel(v)
+    set_fill <- ifelse(v >= 0, pal("blues", 3), pal("reds", 3))
+    
+    plot <- plot +
+      geom_tile(mapping = aes(x = x, y = y, fill = factor(v)), data = df) + 
+      scale_fill_manual(
+        name = "Net migrants\nper 1000 people",
+        labels = set_labels,
+        values = set_fill
+      ) + 
+      theme(legend.text = element_text(
+        size = basesize,
+        hjust = .5,
+        margin = margin(l = k())
+      ))
     
   } else {
-    plot <- plot_empty(title, source, basesize, font)
+    
+    threshold <- quantile(abs(df$v), prob = .9)
+    set_limits <- c(-threshold, threshold)
+    set_labels <- function(x) {
+      ifelse(x == 0 | abs(x) == threshold, prettylabel(x), "")
+    }
+    
+    plot <- plot + 
+      geom_tile(aes(x = x, y = y, fill = v), df) + 
+      scale_fill_steps2(
+        n.breaks = 7,
+        nice.breaks = FALSE, 
+        name = legendtitle,
+        labels = set_labels,
+        show.limits = TRUE,
+        limits = set_limits,
+        low = pal("reds"), 
+        high = pal("blues"),
+        midpoint = 0
+      )
   }
+  
+  # Superimpose borders
+  plot <- plot + 
+    geom_sf(
+      data = border_sub, 
+      fill = NA, color = pal("grays", 3), linewidth = k(.025)
+    ) + 
+    geom_sf(
+      data = border, 
+      fill = NA, color = pal("grays", 2), linewidth = k(.05)
+    ) +
+    coord_sf(
+      xlim = lims$xlim,
+      ylim = lims$ylim,
+      expand = FALSE
+    )
+  
+  # If map is long, position legend to the right 
+  if ((aspect > 1 & hero != "USA") | hero %in% small) {
+    plot <- plot + 
+      theme(
+        legend.key.height = unit(basesize, "points"),
+        legend.key.width = unit(.75 * basesize, "points"),
+        legend.text = element_text(margin = margin(l = k())),
+        legend.text.position = "right",
+        legend.title = element_text(
+          size = basesize, 
+          hjust = .5,
+          margin = margin(b = k(3.5))
+        ),
+        legend.title.position = "top",
+        legend.position = "right"
+      )
+  }
+  
+  # Special cases
+  
+  if (hero == "USA") {
+    
+    ask <- plot + 
+      coord_sf(xlim = c(-172, -129), ylim = c(53, 72), expand = FALSE) + 
+      theme(legend.position = "none", plot.margin = margin(0, 0, 0, 0))
+    hwi <- plot + 
+      coord_sf(xlim = c(-160, -154), ylim = c(18.5, 22.3), expand = FALSE) + 
+      theme(legend.position = "none", plot.margin = margin(0, 0, 0, 0))
+    
+    plot <- ggdraw(
+      plot + coord_sf(xlim = c(-125, -66), ylim = c(23, 50), expand = FALSE)
+    ) +
+      cowplot::draw_plot(ask, x = 0, y = .12, scale = .3, halign = 0, valign = 0) +
+      cowplot::draw_plot(hwi, x = .25, y = .15, scale = .2, halign = 0, valign = 0)
+  }
+  
+  if (hero == "RUS") {
+    
+    border_sub <- filter(admin1, adm0_a3 == hero) 
+    border <- border_sub |> sf::st_union()
+    
+    border_main <- border |> 
+      sf::st_crop(c(xmin = 19, ymin = 0, xmax = 179.9999, ymax = 82))
+    border_main_sub <- border_sub |> 
+      sf::st_crop(c(xmin = 19, ymin = 0, xmax = 179.9999, ymax = 82))
+    
+    border_cut <- border |> 
+      sf::st_crop(c(xmin = -179.9999, ymin = 0, xmax = -170, ymax = 82))
+    border_cut_sub <- border_sub |> 
+      sf::st_crop(c(xmin = -179.9999, ymin = 0, xmax = -170, ymax = 82))
+    
+    border_spat_main <- sf::as_Spatial(border_main)
+    rast_main <- terra::crop(
+      terra::mask(nmig_rast, border_spat_main), 
+      border_spat_main
+    )
+    df_main <- terra::as.data.frame(rast_main, xy = TRUE, na.rm = TRUE)
+    
+    border_spat_cut <- sf::as_Spatial(border_cut)
+    rast_cut <- terra::crop(
+      terra::mask(nmig_rast, border_spat_cut), 
+      border_spat_cut
+    )
+    df_cut <- terra::as.data.frame(rast_cut, xy = TRUE, na.rm = TRUE)
+    
+    # Background maps
+    plot_main <- ggplot() + 
+      geom_sf(data = border_main, fill = pal("grays", 5), color = NA) +
+      map_themes()
+    plot_cut <- ggplot() + 
+      geom_sf(data = border_cut, fill = pal("grays", 5), color = NA) +
+      map_themes()
+    
+    plot_main <- plot_main + 
+      geom_tile(aes(x = x, y = y, fill = v), df_main) + 
+      geom_sf(
+        data = border_main_sub, 
+        fill = NA, color = pal("grays", 3), linewidth = k(.025)
+      ) + 
+      geom_sf(
+        data = border_main, 
+        fill = NA, color = pal("grays", 2), linewidth = k(.05)
+      ) +
+      scale_fill_steps2(
+        n.breaks = 7,
+        nice.breaks = FALSE, 
+        name = legendtitle,
+        labels = set_labels,
+        show.limits = TRUE,
+        limits = set_limits,
+        low = pal("reds"), 
+        high = pal("blues"),
+        midpoint = 0
+      )
+    
+    plot_cut <- plot_cut + 
+      geom_tile(aes(x = x, y = y, fill = v), df_cut) + 
+      geom_sf(
+        data = border_cut_sub, 
+        fill = NA, color = pal("grays", 3), linewidth = k(.025)
+      ) + 
+      geom_sf(
+        data = border_cut, 
+        fill = NA, color = pal("grays", 2), linewidth = k(.05)
+      ) +
+      scale_fill_steps2(
+        n.breaks = 7,
+        nice.breaks = FALSE, 
+        name = legendtitle,
+        labels = set_labels,
+        show.limits = TRUE,
+        limits = set_limits,
+        low = pal("reds"), 
+        high = pal("blues"),
+        midpoint = 0
+      ) + 
+      theme(legend.position = "none")
+    
+    plot <- ggdraw(plot_main + theme(plot.margin = margin(0, 0, 0, 0))) +
+      cowplot::draw_plot(
+        plot_cut, 
+        x = .88, y = .5675, scale = .19375, 
+        halign = 0, valign = 0
+      )
+  }
+  
+  plot_title <- ggplot() + 
+    ggtitle(title) +
+    apply_theme("map", basesize = basesize, font = font) + 
+    theme(plot.margin = margin(0, 0, k(2.5), 0))
+  
+  plot_caption <- ggplot() + 
+    labs(caption = source) +
+    apply_theme("map", basesize = basesize, font = font) + 
+    theme(plot.margin = margin(0, 0, 0, 0))
+  
+  plot <- plot_grid(
+    plot_title, plot, plot_caption, 
+    nrow = 3,
+    rel_heights = c(.100, 1, .050)
+  ) +
+    theme(plot.margin = margin(k(2), k(3), k(2), k(3)))
   
   return(plot)
 }
@@ -164,38 +424,23 @@ plot_remt <- function(hero,
   t0 <- snap_data("remt", hero)$range[1]
   t1 <- snap_data("remt", hero)$range[2]
   
-  if (is.null(title)) {
-    plot_title <- paste0(
-      "Remittances, ",
-      snap_data("remt", hero)$range |> paste(collapse = "\u2013")
-    )
-  } else {
-    plot_title <- title
+  if (lang == "en") {
+    if (is.null(title)) title <- "Remittances"
+    source <- "Source: World Bank."
+    remin <- "Remittance received"
+    remout <- "Remittance paid"
+    nodata <- "No data"
   }
-  source <- "Source: World Bank."
-  remin <- "Remittance received"
-  remout <- "Remittance paid"
-  nodata <- "No data"
   
   if (lang == "pt") {
-    if (is.null(title)) {
-      plot_title <- paste0(
-        "Remessas, ",
-        snap_data("remt", hero)$range |> paste(collapse = "\u2013")
-      )
-    } else {
-      plot_title <- title
-    }
+    if (is.null(title)) title <- "Remessas"
     source <- "Fonte: Banco Mundial."
     remin <- "Remessa recebida"
     remout <- "Remessa paga"
     nodata <- "Nenhum dado"
   }
   
-  vars <- c(
-    "remin" = pal("blues", 2),
-    "remout" = pal("reds", 2)
-  )
+  vars <- c("remin" = pal("blues", 2), "remout" = pal("reds", 2))
   
   plot_elements <- list(
     geom_line(
@@ -203,7 +448,6 @@ plot_remt <- function(hero,
       linewidth = k(.3),
       na.rm = TRUE
     ),
-    labs(title = plot_title, caption = source),
     scale_x_continuous(
       minor_breaks = seq(t0, t1, 5),
       expand = expansion(mult = c(.025, .150)),
@@ -222,6 +466,11 @@ plot_remt <- function(hero,
   )
   
   if (nrow(data) > 0) {
+    
+    plot_title <- paste0(
+      title, " ,",
+      snap_data("remt", hero)$range |> paste(collapse = "\u2013")
+    )
     
     axis <- set_axis(data$n, "USD")
     
@@ -252,6 +501,7 @@ plot_remt <- function(hero,
         linetype = "11",
         linewidth = k(.1)
       ) +
+      labs(title = plot_title, caption = source) +
       geom_label(
         aes(y = n, fill = var, label = lab_n), lab,
         x = max(t1) + 1,
@@ -278,30 +528,7 @@ plot_remt <- function(hero,
     
   } else {
     
-    df <- expand.grid(t = t0:t1, var = c("remin", "remout"), n = 0)
-    
-    plot <- ggplot(df) +
-      plot_elements +
-      scale_y_continuous(
-        limits = c(1, 10),
-        breaks = 1,
-        expand = expansion(mult = 0)
-      ) +
-      theme(
-        axis.text.y = element_blank(),
-        axis.ticks.x = element_blank(),
-        panel.grid.major.y = element_blank(),
-        panel.background = element_rect(color = NA, fill = pal("unblues", 6)),
-      )
-    
-    plot <- ggdraw(plot) +
-      draw_label(
-        nodata,
-        y = .55,
-        fontfamily = font,
-        color = pal("blues", 3),
-        size = k(3)
-      )
+    plot <- plot_empty(title, source, basesize, font, msg = nodata)
   }
   
   return(plot)
@@ -318,42 +545,27 @@ plot_fdi <- function(hero,
   
   k <- function(factor = 1) factor * basesize / .pt
   
-  data <- snap_data("fdi", hero)$data
-  t0 <- snap_data("fdi", hero)$range[1]
-  t1 <- snap_data("fdi", hero)$range[2]
-  
-  if (is.null(title)) {
-    plot_title <- paste0(
-      "Foreign direct investment, ",
-      snap_data("fdi", hero)$range |> paste(collapse = "\u2013")
-    )
-  } else {
-    plot_title <- title
+  if (lang == "en") {
+    if (is.null(title)) title <- "Foreign direct investment"
+    source <- "Source: World Bank."
+    fdiin <- "FDI inflow"
+    fdiout <- "FDI outflow"
+    nodata <- "No data"
   }
-  source <- "Source: World Bank."
-  fdiin <- "FDI inflow"
-  fdiout <- "FDI outflow"
-  nodata <- "No data"
   
   if (lang == "pt") {
-    if (is.null(title)) {
-      plot_title <- paste0(
-        "Investimento estrangeiro direto, ",
-        snap_data("fdi", hero)$range |> paste(collapse = "\u2013")
-      )
-    } else {
-      plot_title <- title
-    }
+    if (is.null(title)) title <- "Investimento estrangeiro direto"
     source <- "Fonte: Banco Mundial."
     fdiin <- "Entrada de IED"
     fdiout <- "Saída de IED"
     nodata <- "Nenhum dado"
   }
   
-  vars <- c(
-    "fdiin" = pal("blues", 2),
-    "fdiout" = pal("reds", 2)
-  )
+  data <- snap_data("fdi", hero)$data
+  t0 <- snap_data("fdi", hero)$range[1]
+  t1 <- snap_data("fdi", hero)$range[2]
+  
+  vars <- c("fdiin" = pal("blues", 2), "fdiout" = pal("reds", 2))
   
   plot_elements <- list(
     geom_line(
@@ -361,7 +573,6 @@ plot_fdi <- function(hero,
       linewidth = k(.3),
       na.rm = TRUE
     ),
-    labs(title = plot_title, caption = source),
     scale_x_continuous(
       minor_breaks = seq(t0, t1, 5),
       expand = expansion(mult = c(.025, .150)),
@@ -379,6 +590,11 @@ plot_fdi <- function(hero,
   if (nrow(data) > 0) {
     
     axis <- set_axis(data$n, "USD")
+    
+    plot_title <- paste0(
+      title, ", ",
+      snap_data("fdi", hero)$range |> paste(collapse = "\u2013")
+    )
     
     endpts <- data |>
       filter(t %in% c(max(t), max(t) - 1), .by = var) |>
@@ -420,6 +636,7 @@ plot_fdi <- function(hero,
         label.size = .1,
         show.legend = FALSE,
       ) +
+      labs(title = plot_title, caption = source) +
       scale_y_continuous(
         name = axis$title,
         breaks = axis$breaks,
@@ -433,30 +650,7 @@ plot_fdi <- function(hero,
     
   } else {
     
-    df <- expand.grid(t = t0:t1, var = c("fdiin", "fdiout"), n = 0)
-    
-    plot <- ggplot(df) +
-      plot_elements +
-      scale_y_continuous(
-        limits = c(1, 10),
-        breaks = 1,
-        expand = expansion(mult = 0)
-      ) +
-      theme(
-        axis.text.y = element_blank(),
-        axis.ticks.x = element_blank(),
-        panel.grid.major.y = element_blank(),
-        panel.background = element_rect(color = NA, fill = pal("unblues", 6)),
-      )
-    
-    plot <- ggdraw(plot) +
-      draw_label(
-        nodata,
-        y = .55,
-        fontfamily = font,
-        color = pal("blues", 3),
-        size = k(3)
-      )
+    plot <- plot_empty(title, source, basesize, font, msg = nodata)
   }
   
   return(plot)
@@ -478,29 +672,17 @@ plot_pop <- function(hero,
   t0 <- snap_data("pop", hero)$range[1]
   t1 <- snap_data("pop", hero)$range[2]
   
-  if (is.null(title)) {
-    plot_title <- paste0(
-      "Population,\n",
-      snap_data("pop", hero)$range |> paste(collapse = "\u2013")
-    )
-  } else {
-    plot_title <- title
+  if (lang == "en") {
+    if (is.null(title)) title <- "Population"
+    source <- "Source: UN DESA."
+    persons <- "Persons"
+    worldmed <- "World median"
+    name_text <- "name_text"
+    nodata <- "No data"
   }
-  source <- "Source: UN DESA."
-  persons <- "Persons"
-  worldmed <- "World median"
-  name_text <- "name_text"
-  nodata <- "No data"
   
   if (lang == "pt") {
-    if (is.null(title)) {
-      plot_title <- paste0(
-        "População,\n",
-        snap_data("pop", hero, lang = "pt")$range |> paste(collapse = "\u2013")
-      )
-    } else {
-      plot_title <- title
-    }
+    if (is.null(title)) title <- "População"
     source <- "Fonte: DAESNU."
     persons <- "Pessoas"
     worldmed <- "Mediana mundial"
@@ -511,6 +693,11 @@ plot_pop <- function(hero,
   if (nrow(data) > 0) {
     
     axis <- set_axis(data$n, persons, lang = lang)
+    
+    plot_title <- paste0(
+      title, ",\n",
+      snap_data("pop", hero)$range |> paste(collapse = "\u2013")
+    )
     
     endpts <- data |>
       filter(t %in% c(max(t), max(t) - 1), .by = var) |>
@@ -584,7 +771,8 @@ plot_pop <- function(hero,
       )
     
   } else {
-    plot <- plot_empty(plot_title, source, basesize, font)
+    
+    plot <- plot_empty(title, source, basesize, font, msg = nodata)
   }
   
   return(plot)
@@ -606,29 +794,17 @@ plot_birth <- function(hero,
   t0 <- snap_data("birth", hero)$range[1]
   t1 <- snap_data("birth", hero)$range[2]
   
-  if (is.null(title)) {
-    plot_title <- paste0(
-      "Birth rate,\n",
-      snap_data("birth", hero)$range |> paste(collapse = "\u2013")
-    )
-  } else {
-    plot_title <- title
+  if (lang == "en") {
+    if (is.null(title)) title <- "Birth rate"
+    source <- "Source: World Bank."
+    worldmed <- "World median"
+    name_text <- "name_text"
+    yaxis <- "Births per 1000 population"
+    nodata <- "No data"
   }
-  source <- "Source: World Bank."
-  worldmed <- "World median"
-  name_text <- "name_text"
-  yaxis <- "Births per 1000 population"
-  nodata <- "No data"
   
   if (lang == "pt") {
-    if (is.null(title)) {
-      plot_title <- paste0(
-        "Taxa de natalidade,\n",
-        snap_data("birth", hero)$range |> paste(collapse = "\u2013")
-      )
-    } else {
-      plot_title <- title
-    }
+    if (is.null(title)) title <- "Taxa de natalidade"
     source <- "Fonte: Banco Mundial."
     worldmed <- "Mediana mundial"
     name_text <- "name_pt"
@@ -637,6 +813,11 @@ plot_birth <- function(hero,
   }
   
   if (nrow(data) > 0) {
+    
+    plot_title <- paste0(
+      title, ",\n",
+      snap_data("birth", hero)$range |> paste(collapse = "\u2013")
+    )
     
     endpts <- data |>
       filter(t %in% c(max(t), max(t) - 1), .by = var) |>
@@ -708,7 +889,8 @@ plot_birth <- function(hero,
       )
     
   } else {
-    plot <- plot_empty(plot_title, source, basesize, font)
+    
+    plot <- plot_empty(title, source, basesize, font, msg = nodata)
   }
   
   return(plot)
@@ -730,29 +912,17 @@ plot_depend <- function(hero,
   t0 <- snap_data("depend", hero)$range[1]
   t1 <- snap_data("depend", hero)$range[2]
   
-  if (is.null(title)) {
-    plot_title <- paste0(
-      "Age dependency ratio,\n",
-      snap_data("depend", hero)$range |> paste(collapse = "\u2013")
-    )
-  } else {
-    plot_title <- title
+  if (lang == "en") {
+    if (is.null(title)) title <- "Age dependency ratio"
+    source <- "Source: World Bank."
+    worldmed <- "World median"
+    name_text <- "name_text"
+    yaxis <- "Dependents per 100 working age"
+    nodata <- "No data"
   }
-  source <- "Source: World Bank."
-  worldmed <- "World median"
-  name_text <- "name_text"
-  yaxis <- "Dependents per 100 working age"
-  nodata <- "No data"
   
   if (lang == "pt") {
-    if (is.null(title)) {
-      plot_title <- paste0(
-        "Taxa de dependência\ndemográfica, ",
-        snap_data("depend", hero)$range |> paste(collapse = "\u2013")
-      )
-    } else {
-      plot_title <- title
-    }
+    if (is.null(title)) title <- "Taxa de dependência\ndemográfica"
     source <- "Fonte: Banco Mundial."
     worldmed <- "Mediana mundial"
     name_text <- "name_pt"
@@ -761,6 +931,14 @@ plot_depend <- function(hero,
   }
   
   if (nrow(data) > 0) {
+    
+    if (lang == "en") title <- "Age dependency ratio,\n"
+    if (lang == "pt") title <- "Taxa de dependência\ndemográfica, "
+    
+    plot_title <- paste0(
+      title,
+      snap_data("depend", hero)$range |> paste(collapse = "\u2013")
+    )
     
     endpts <- data |>
       filter(t %in% c(max(t), max(t) - 1), .by = var) |>
@@ -832,7 +1010,8 @@ plot_depend <- function(hero,
       )
     
   } else {
-    plot <- plot_empty(plot_title, source, basesize, font)
+    
+    plot <- plot_empty(title, source, basesize, font, msg = nodata)
   }
   
   return(plot)
@@ -854,28 +1033,16 @@ plot_income <- function(hero,
   t0 <- snap_data("income", hero)$range[1]
   t1 <- snap_data("income", hero)$range[2]
   
-  if (is.null(title)) {
-    plot_title <- paste0(
-      "GDP per capita,\n",
-      snap_data("income", hero)$range |> paste(collapse = "\u2013")
-    )
-  } else {
-    plot_title <- title
+  if (lang == "en") {
+    if (is.null(title)) title <- "GDP per capita"
+    source <- "Source: World Bank."
+    worldmed <- "World median"
+    name_text <- "name_text"
+    nodata <- "No data"
   }
-  source <- "Source: World Bank."
-  worldmed <- "World median"
-  name_text <- "name_text"
-  nodata <- "No data"
   
   if (lang == "pt") {
-    if (is.null(title)) {
-      plot_title <- paste0(
-        "PIB per capita,\n",
-        snap_data("income", hero)$range |> paste(collapse = "\u2013")
-      )
-    } else {
-      plot_title <- title
-    }
+    if (is.null(title)) title <- "PIB per capita"
     source <- "Fonte: Banco Mundial."
     worldmed <- "Mediana mundial"
     name_text <- "name_pt"
@@ -885,6 +1052,11 @@ plot_income <- function(hero,
   if (nrow(data) > 0) {
     
     axis <- set_axis(data$n, "$")
+    
+    plot_title <- paste0(
+      title, ",\n",
+      snap_data("income", hero)$range |> paste(collapse = "\u2013")
+    )
     
     endpts <- data |>
       filter(t %in% c(max(t), max(t) - 1), .by = var) |>
@@ -961,7 +1133,7 @@ plot_income <- function(hero,
     
   } else {
     
-    plot <- plot_empty(plot_title, source, basesize, font)
+    plot <- plot_empty(title, source, basesize, font, msg = nodata)
   }
   
   return(plot)
@@ -983,29 +1155,17 @@ plot_inf <- function(hero,
   t0 <- snap_data("inf", hero)$range[1]
   t1 <- snap_data("inf", hero)$range[2]
   
-  if (is.null(title)) {
-    plot_title <- paste0(
-      "Inflation rate,\n",
-      snap_data("inf", hero)$range |> paste(collapse = "\u2013")
-    )
-  } else {
-    plot_title <- title
+  if (lang == "en") {
+    if (is.null(title)) title <- "Inflation rate"
+    source <- "Source: World Bank."
+    worldmed <- "World median"
+    name_text <- "name_text"
+    yaxis <- "Per cent"
+    nodata <- "No data"
   }
-  source <- "Source: World Bank."
-  worldmed <- "World median"
-  name_text <- "name_text"
-  yaxis <- "Per cent"
-  nodata <- "No data"
   
   if (lang == "pt") {
-    if (is.null(title)) {
-      plot_title <- paste0(
-        "Taxa de inflação,\n",
-        snap_data("inf", hero)$range |> paste(collapse = "\u2013")
-      )
-    } else {
-      plot_title <- title
-    }
+    if (is.null(title)) title <- "Taxa de inflação"
     source <- "Fonte: Banco Mundial."
     worldmed <- "Mediana mundial"
     name_text <- "name_pt"
@@ -1014,6 +1174,11 @@ plot_inf <- function(hero,
   }
   
   if (nrow(data) > 0) {
+    
+    plot_title <- paste0(
+      title, ",\n",
+      snap_data("inf", hero)$range |> paste(collapse = "\u2013")
+    )
     
     endpts <- data |>
       filter(t %in% c(max(t), max(t) - 1), .by = var) |>
@@ -1086,7 +1251,7 @@ plot_inf <- function(hero,
     
   } else {
     
-    plot <- plot_empty(plot_title, source, basesize, font)
+    plot <- plot_empty(title, source, basesize, font, msg = nodata)
   }
   
   return(plot)
@@ -1108,29 +1273,17 @@ plot_unem <- function(hero,
   t0 <- snap_data("unem", hero)$range[1]
   t1 <- snap_data("unem", hero)$range[2]
   
-  if (is.null(title)) {
-    plot_title <- paste0(
-      "Unemployment rate,\n",
-      snap_data("unem", hero)$range |> paste(collapse = "\u2013")
-    )
-  } else {
-    plot_title <- title
+  if (lang == "en") {
+    if (is.null(title)) title <- "Unemployment rate"
+    source <- "Source: ILO."
+    worldmed <- "World median"
+    name_text <- "name_text"
+    yaxis <- "Per cent"
+    nodata <- "No data"
   }
-  source <- "Source: ILO."
-  worldmed <- "World median"
-  name_text <- "name_text"
-  yaxis <- "Per cent"
-  nodata <- "No data"
   
   if (lang == "pt") {
-    if (is.null(title)) {
-      plot_title <- paste0(
-        "Taxa de inflação,\n",
-        snap_data("unem", hero)$range |> paste(collapse = "\u2013")
-      )
-    } else {
-      plot_title <- title
-    }
+    if (is.null(title)) title <- "Taxa de desemprego"
     source <- "Fonte: OIT."
     worldmed <- "Mediana mundial"
     name_text <- "name_pt"
@@ -1139,6 +1292,11 @@ plot_unem <- function(hero,
   }
   
   if (nrow(data) > 0) {
+    
+    plot_title <- paste0(
+      title, ",\n",
+      snap_data("unem", hero)$range |> paste(collapse = "\u2013")
+    )
     
     endpts <- data |>
       filter(t %in% c(max(t), max(t) - 1), .by = var) |>
@@ -1211,7 +1369,7 @@ plot_unem <- function(hero,
     
   } else {
     
-    plot <- plot_empty(plot_title, source, basesize, font)
+    plot <- plot_empty(title, source, basesize, font, msg = nodata)
   }
   
   return(plot)

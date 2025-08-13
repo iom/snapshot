@@ -124,9 +124,9 @@ caption_stocks_emig_pt <- function(iso) {
   name <- namer(iso, lang = "pt")
   region <- filter(gdidata::countrynames, iso3 == iso)$iom_region
   
-  data <- plot_data("stocks", use_2020 = TRUE)$data |> 
+  data <- snap_data("stocks", use_2020 = TRUE)$data |> 
     filter(panel == "emig")
-  data_iso <- plot_data("stocks", iso = iso, use_2020 = TRUE)$data |> 
+  data_iso <- snap_data("stocks", iso = iso, use_2020 = TRUE)$data |> 
     filter(panel == "emig")
   
   t0 <- min(data_iso$t)
@@ -203,9 +203,9 @@ caption_stocks_immig_pt <- function(iso) {
   
   name <- namer(iso, lang = "pt")
   region <- filter(gdidata::countrynames, iso3 == iso)$iom_region
-  data <- plot_data("stocks", use_2020 = TRUE)$data |> 
+  data <- snap_data("stocks", use_2020 = TRUE)$data |> 
     filter(panel == "immig")
-  data_iso <- plot_data("stocks", iso = iso, use_2020 = TRUE)$data |> 
+  data_iso <- snap_data("stocks", iso = iso, use_2020 = TRUE)$data |> 
     filter(panel == "immig", n > 0)
   
   t0 <- min(data_iso$t)
@@ -292,8 +292,8 @@ caption_nmig_pt <- function(iso) {
   
   name <- namer(iso)
   
-  data <- plot_data("nmig")$data
-  data_iso <- plot_data("nmig", iso)$data
+  data <- snap_data("nmig")$data
+  data_iso <- snap_data("nmig", iso)$data
   
   map <- paste(
     "No mapa abaixo, a migração líquida é expressa em relação à população",

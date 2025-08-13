@@ -31,7 +31,7 @@ j <- 0
 #| fig-height: 2.75
 #| message: false
 
-snap_plot("stocks_pt", code, basesize = basesize, font = font) |> 
+snap_plot("stocks", code, basesize = basesize, font = font, lang = "pt") |> 
   plot_label(i, span = 1, h = .15 / 2.75)
 i <- i + 1
 ```
@@ -41,7 +41,7 @@ i <- i + 1
 #| fig-height: 2.25
 #| message: false
 
-snap_plot("nats_pt", code, basesize = basesize, font = font) |> 
+snap_plot("nats", code, basesize = basesize, font = font, lang = "pt") |> 
   plot_label(i, span = 1, h = .15 / 2.25)
 i <- i + 1
 ```
@@ -60,7 +60,7 @@ i <- i + 1
 #| fig-height: 2.50
 #| message: false
 
-snap_plot("migpyr_pt", code, basesize = basesize, font = font) |> 
+snap_plot("migpyr", code, basesize = basesize, font = font, lang = "pt") |> 
   plot_label(i, span = 1, h = .15 / 2.50)
 i <- i + 1
 ```
@@ -75,9 +75,9 @@ i <- i + 1
 #| message: false
 
 cowplot::plot_grid(
-  snap_plot("nmig_pt", code, basesize = basesize, font = font) |> 
+  snap_plot("nmig", code, basesize = basesize, font = font, lang = "pt") |> 
     plot_label(i, h = .15 / 2.50),
-  plot_nmigmap_pt(code, basesize = basesize, font = font) |> 
+  snap_plot("nmigmap", code, basesize = basesize, font = font, lang = "pt") |> 
     plot_label(i + 1, h = .15 / 2.50)
 )
 i <- i + 2
@@ -92,7 +92,7 @@ i <- i + 2
 #| fig-height: 2.25
 #| message: false
 
-snap_plot("idp_pt", code, basesize = basesize, font = font) |> 
+snap_plot("idp", code, basesize = basesize, font = font, lang = "pt") |> 
   plot_label(i, span = 1, h = .15 / 2.25)
 i <- i + 1
 ```
@@ -108,9 +108,9 @@ i <- i + 1
 #| message: false
 
 cowplot::plot_grid(
-  snap_plot("idpmap_pt", code, basesize = basesize, font = font) |> 
+  snap_plot("idpmap", code, basesize = basesize, font = font, lang = "pt") |> 
     plot_label(i, h = .15 / 2.75),
-  snap_plot("idcause_pt", code, basesize = basesize, font = font) |> 
+  snap_plot("idcause", code, basesize = basesize, font = font, lang = "pt") |> 
     plot_label(i + 1, h = .15 / 2.75)
 )
 i <- i + 2
@@ -126,9 +126,9 @@ i <- i + 2
 #| message: false
 
 cowplot::plot_grid(
-  snap_plot("mmp_pt", code, basesize = basesize, font = font) |> 
+  snap_plot("mmp", code, basesize = basesize, font = font, lang = "pt") |> 
     plot_label(i, h = .15 / 2.50),
-  snap_plot("mmpmap_pt", code, basesize = basesize, font = font) |> 
+  snap_plot("mmpmap", code, basesize = basesize, font = font, lang = "pt") |> 
     plot_label(i + 1, h = .15 / 2.50)
 )
 i <- i + 2
